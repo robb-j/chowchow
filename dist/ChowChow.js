@@ -3,14 +3,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path_1 = require("path");
 const express_1 = __importDefault(require("express"));
+var ChowChowState;
+(function (ChowChowState) {
+    ChowChowState["stopped"] = "stopped";
+    ChowChowState["running"] = "running";
+})(ChowChowState = exports.ChowChowState || (exports.ChowChowState = {}));
+const nameOf = (o) => o.constructor.name;
 class ChowChow {
     constructor() {
         this.modules = new Array();
-        this.projDir = path_1.join(__dirname, '../');
         this.server = express_1.default();
+        this.routesToApply = new Array();
+        this.handlersToApply = new Array();
+        this.state = ChowChowState.stopped;
     }
+    static create() { return new ChowChow(); }
     use(module) {
         module.app = this;
         this.modules.push(module);
@@ -27,38 +35,65 @@ class ChowChow {
         return ctx;
     }
     applyRoutes(fn) {
-        fn(this.server, route => async (req, res, next) => {
-            try {
-                await route(this.makeCtx(req, res, next));
-            }
-            catch (error) {
-                next(error);
-            }
-        });
+        if (this.state === ChowChowState.running) {
+            throw new Error('Cannot add routes once running');
+        }
+        this.routesToApply.push(fn);
     }
     applyErrorHandler(fn) {
-        this.server.use(((err, req, res, next) => {
-            fn(err, this.makeCtx(req, res, next));
-        }));
+        if (this.state === ChowChowState.running) {
+            throw new Error('Cannot add error handlers once running');
+        }
+        this.handlersToApply.push(fn);
     }
-    async start() {
+    async start({ verbose = false }) {
+        const logIfVerbose = verbose ? console.log : () => { };
+        logIfVerbose('Checking environment');
         let errors = new Array();
         for (let module of this.modules) {
             try {
                 module.checkEnvironment();
+                logIfVerbose(' ✓ ' + nameOf(module));
             }
             catch (error) {
-                errors.push(module.constructor.name + ': ' + error.message);
+                errors.push(' ⨉ ' + nameOf(module) + ': ' + error.message);
             }
         }
         if (errors.length > 0) {
             errors.forEach(err => console.log(err));
             process.exit(1);
         }
+        logIfVerbose('Setting up modules');
         for (let module of this.modules) {
             module.setupModule();
+            logIfVerbose(' ✓ ' + nameOf(module));
         }
+        logIfVerbose('Extending express');
+        for (let module of this.modules) {
+            module.extendExpress(this.server);
+            logIfVerbose(' ✓ ' + nameOf(module));
+        }
+        logIfVerbose('Adding routes');
+        for (let fn of this.routesToApply) {
+            fn(this.server, route => async (req, res, next) => {
+                try {
+                    await route(this.makeCtx(req, res, next));
+                }
+                catch (error) {
+                    next(error);
+                }
+            });
+        }
+        this.routesToApply = [];
+        console.log('Adding handlers');
+        for (let fn of this.handlersToApply) {
+            this.server.use(((err, req, res, next) => {
+                fn(err, this.makeCtx(req, res, next));
+            }));
+        }
+        this.handlersToApply = [];
         await new Promise(resolve => this.server.listen(3000, resolve));
+        this.state = ChowChowState.running;
     }
 }
 exports.ChowChow = ChowChow;

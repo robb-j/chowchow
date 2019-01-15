@@ -1,4 +1,8 @@
 import { Application, Request, Response, NextFunction, RequestHandler } from 'express';
+export declare enum ChowChowState {
+    stopped = "stopped",
+    running = "running"
+}
 export declare type BaseContext = {
     req: Request;
     res: Response;
@@ -21,12 +25,17 @@ export declare type ErrorHandler<T> = (error: any, ctx: BaseContext & T) => Prom
 export declare type RouterFn<T> = (app: Application, r: (route: ChowChowRoute<T>) => RequestHandler) => void;
 export declare class ChowChow {
     modules: Module[];
-    projDir: string;
     private server;
+    private routesToApply;
+    private handlersToApply;
+    private state;
+    static create(): ChowChow;
     use(module: Module): ChowChow;
     applyMiddleware(fn: ExpressFn): void;
     makeCtx(req: Request, res: Response, next: NextFunction): any;
     applyRoutes<T>(fn: RouterFn<T>): void;
     applyErrorHandler<T>(fn: ErrorHandler<T>): void;
-    start(): Promise<void>;
+    start({ verbose }: {
+        verbose?: boolean | undefined;
+    }): Promise<void>;
 }
