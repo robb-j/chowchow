@@ -1,5 +1,5 @@
 {
-  "name": "@robb-j/chowchow",
+  "name": "@robb_j/chowchow",
   "version": "0.1.0",
   "description": "A modular express wrapper for typescript",
   "main": "dist/index.js",
