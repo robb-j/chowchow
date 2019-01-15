@@ -1,5 +1,10 @@
 import express, { Application, Request, Response, NextFunction, RequestHandler } from 'express'
 
+export enum ChowChowState {
+  stopped = 'stopped',
+  running = 'running'
+}
+
 export type BaseContext = {
   req: Request
   res: Response
@@ -39,6 +44,10 @@ export type RouterFn<T> = (
 export class ChowChow {
   modules = new Array<Module>()
   private server = express()
+  private routesToApply = new Array<RouterFn<any>>()
+  private state = ChowChowState.stopped
+  
+  static create() { return new ChowChow() }
 
   use(module: Module): ChowChow {
     module.app = this
@@ -59,13 +68,10 @@ export class ChowChow {
   }
 
   applyRoutes<T>(fn: RouterFn<T>) {
-    fn(this.server, route => async (req, res, next) => {
-      try {
-        await route(this.makeCtx(req, res, next))
-      } catch (error) {
-        next(error)
-      }
-    })
+    if (this.state === ChowChowState.running) {
+      throw new Error('Cannot add routes once running')
+    }
+    this.routesToApply.push(fn)
   }
 
   applyErrorHandler<T>(fn: ErrorHandler<T>) {
@@ -83,18 +89,34 @@ export class ChowChow {
         errors.push(module.constructor.name + ': ' + error.message)
       }
     }
+    
     if (errors.length > 0) {
       errors.forEach(err => console.log(err))
       process.exit(1)
     }
+    
+    console.log('Setting up modules')
     for (let module of this.modules) {
       module.setupModule()
     }
     
+    console.log('Extending express')
     for (let module of this.modules) {
       module.extendExpress(this.server)
     }
+    
+    console.log('Adding routes')
+    for (let fn of this.routesToApply) {
+      fn(this.server, route => async (req, res, next) => {
+        try {
+          await route(this.makeCtx(req, res, next))
+        } catch (error) {
+          next(error)
+        }
+      })
+    }
 
     await new Promise(resolve => this.server.listen(3000, resolve))
+    this.state = ChowChowState.running
   }
 }
