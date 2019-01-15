@@ -90,6 +90,10 @@ export class ChowChow {
     for (let module of this.modules) {
       module.setupModule()
     }
+    
+    for (let module of this.modules) {
+      module.extendExpress(this.server)
+    }
 
     await new Promise(resolve => this.server.listen(3000, resolve))
   }
