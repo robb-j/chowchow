@@ -41,10 +41,13 @@ export type RouterFn<T> = (
   r: (route: ChowChowRoute<T>) => RequestHandler
 ) => void
 
+const nameOf = (o: object) => o.constructor.name
+
 export class ChowChow {
   modules = new Array<Module>()
   private server = express()
   private routesToApply = new Array<RouterFn<any>>()
+  private handlersToApply = new Array<ErrorHandler<any>>()
   private state = ChowChowState.stopped
   
   static create() { return new ChowChow() }
@@ -75,18 +78,23 @@ export class ChowChow {
   }
 
   applyErrorHandler<T>(fn: ErrorHandler<T>) {
-    this.server.use(((err, req, res, next) => {
-      fn(err, this.makeCtx(req, res, next))
-    }) as ExpressHandler)
+    if (this.state === ChowChowState.running) {
+      throw new Error('Cannot add error handlers once running')
+    }
+    this.handlersToApply.push(fn)
   }
 
-  async start() {
+  async start({ verbose = false }) {
+    const logIfVerbose = verbose ? console.log : () => {}
+    
+    logIfVerbose('Checking environment')
     let errors = new Array<string>()
     for (let module of this.modules) {
       try {
         module.checkEnvironment()
+        logIfVerbose(' ✓ ' + nameOf(module))
       } catch (error) {
-        errors.push(module.constructor.name + ': ' + error.message)
+        errors.push(' ⨉ ' + nameOf(module) + ': ' + error.message)
       }
     }
     
@@ -95,17 +103,19 @@ export class ChowChow {
       process.exit(1)
     }
     
-    console.log('Setting up modules')
+    logIfVerbose('Setting up modules')
     for (let module of this.modules) {
       module.setupModule()
+      logIfVerbose(' ✓ ' + nameOf(module))
     }
     
-    console.log('Extending express')
+    logIfVerbose('Extending express')
     for (let module of this.modules) {
       module.extendExpress(this.server)
+      logIfVerbose(' ✓ ' + nameOf(module))
     }
     
-    console.log('Adding routes')
+    logIfVerbose('Adding routes')
     for (let fn of this.routesToApply) {
       fn(this.server, route => async (req, res, next) => {
         try {
@@ -115,6 +125,15 @@ export class ChowChow {
         }
       })
     }
+    this.routesToApply = []
+    
+    console.log('Adding handlers')
+    for (let fn of this.handlersToApply) {
+      this.server.use(((err, req, res, next) => {
+        fn(err, this.makeCtx(req, res, next))
+      }) as ExpressHandler)
+    }
+    this.handlersToApply = []
 
     await new Promise(resolve => this.server.listen(3000, resolve))
     this.state = ChowChowState.running
