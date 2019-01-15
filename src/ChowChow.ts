@@ -1,4 +1,3 @@
-import { join } from 'path'
 import express, { Application, Request, Response, NextFunction, RequestHandler } from 'express'
 
 export type BaseContext = {
@@ -39,7 +38,6 @@ export type RouterFn<T> = (
 
 export class ChowChow {
   modules = new Array<Module>()
-  projDir = join(__dirname, '../')
   private server = express()
 
   use(module: Module): ChowChow {
