@@ -1,4 +1,10 @@
-import express, { Application, Request, Response, NextFunction, RequestHandler } from 'express'
+import express, {
+  Application,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler
+} from 'express'
 
 export enum ChowChowState {
   stopped = 'stopped',
@@ -49,8 +55,10 @@ export class ChowChow {
   private routesToApply = new Array<RouterFn<any>>()
   private handlersToApply = new Array<ErrorHandler<any>>()
   private state = ChowChowState.stopped
-  
-  static create() { return new ChowChow() }
+
+  static create() {
+    return new ChowChow()
+  }
 
   use(module: Module): ChowChow {
     module.app = this
@@ -86,7 +94,7 @@ export class ChowChow {
 
   async start({ verbose = false }) {
     const logIfVerbose = verbose ? console.log : () => {}
-    
+
     logIfVerbose('Checking environment')
     let errors = new Array<string>()
     for (let module of this.modules) {
@@ -97,24 +105,24 @@ export class ChowChow {
         errors.push(' ⨉ ' + nameOf(module) + ': ' + error.message)
       }
     }
-    
+
     if (errors.length > 0) {
       errors.forEach(err => console.log(err))
       process.exit(1)
     }
-    
+
     logIfVerbose('Setting up modules')
     for (let module of this.modules) {
       module.setupModule()
       logIfVerbose(' ✓ ' + nameOf(module))
     }
-    
+
     logIfVerbose('Extending express')
     for (let module of this.modules) {
       module.extendExpress(this.server)
       logIfVerbose(' ✓ ' + nameOf(module))
     }
-    
+
     logIfVerbose('Adding routes')
     for (let fn of this.routesToApply) {
       fn(this.server, route => async (req, res, next) => {
@@ -126,7 +134,7 @@ export class ChowChow {
       })
     }
     this.routesToApply = []
-    
+
     console.log('Adding handlers')
     for (let fn of this.handlersToApply) {
       this.server.use(((err, req, res, next) => {

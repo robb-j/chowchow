@@ -65,19 +65,21 @@ export class LoggerModule implements Module {
   // A hook to throw errors if not configured
   // e.g. Check the correct config was passed or check environment variables are set
   checkEnvironment() {}
-  
+
   // Called once all checkEnvironment's pass to setup any internal things
   setupModule() {}
-  
+
   // Not currently used
   clearModule() {}
-  
+
   // Once setup, allows the module to configure express however it needs
   // -> Each is ran in the order modules are applied
   extendExpress(app: express.Application) {}
-  
+
   // Override point for extending the context
   // Its passed to current context and is expected to return its own modifications
-  extendEndpointContext(ctx: BaseContext) { return { your: 'ctx' } }
+  extendEndpointContext(ctx: BaseContext) {
+    return { your: 'ctx' }
+  }
 }
 ```
