@@ -1,6 +1,6 @@
 {
   "name": "chowchow",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A modular express wrapper for typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
