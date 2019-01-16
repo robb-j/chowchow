@@ -18,6 +18,7 @@
     "modular"
   ],
   "author": "Rob Anderson (https://r0b.io)",
+  "repository": "robb-j/chowchow",
   "license": "ISC",
   "husky": {
     "hooks": {
