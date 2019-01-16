@@ -6,20 +6,24 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "lint": "npx tsc --noEmit",
     "coverage": "jest --coverage",
     "preversion": "npm test -s && npm run build && git add dist",
     "prettier": "prettier --write ./**/*.{js,ts,tsx,json,css,md}",
-    "start": "node -r dotenv/config dist",
-    "test": "jest"
+    "start": "node -r dotenv/config dist/index.js",
+    "test": "jest",
+    "dev:once": "ts-node -r dotenv/config src/index.ts",
+    "dev:watch": "nodemon -w src -e ts -x 'npx ts-node -r dotenv/config' src/index.ts"
   },
   "keywords": [
     "express",
     "typescript",
-    "modular"
+    "modular",
+    "chowchow"
   ],
   "author": "Rob Anderson (https://r0b.io)",
   "repository": "robb-j/chowchow",
-  "license": "ISC",
+  "license": "MIT",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
@@ -30,6 +34,10 @@
       "prettier --write",
       "git add"
     ]
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "dependencies": {
     "express": "^4.16.4"
