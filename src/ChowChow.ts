@@ -18,7 +18,7 @@ export type BaseContext = {
 }
 
 export interface Module {
-  app: ChowChow<any>
+  app: ChowChow
   checkEnvironment(): void
   setupModule(): void
   clearModule(): void
@@ -49,15 +49,15 @@ export type RouterFn<T> = (
 
 const nameOf = (o: object) => o.constructor.name
 
-export class ChowChow<T extends BaseContext> {
+export class ChowChow<T extends BaseContext = BaseContext> {
   modules = new Array<Module>()
   private server = express()
   private routesToApply = new Array<RouterFn<any>>()
   private errorHandlers = new Array<ErrorHandler<any>>()
   private state = ChowChowState.stopped
 
-  static create() {
-    return new ChowChow()
+  static create<T extends BaseContext>(): ChowChow<T> {
+    return new ChowChow<T>()
   }
 
   use(module: Module): ChowChow<T> {
