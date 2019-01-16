@@ -9,7 +9,7 @@ export declare type BaseContext = {
     next: NextFunction;
 };
 export interface Module {
-    app: ChowChow<any>;
+    app: ChowChow;
     checkEnvironment(): void;
     setupModule(): void;
     clearModule(): void;
@@ -23,13 +23,13 @@ export declare type ExpressHandler = (error: any, req: Request, res: Response, n
 export declare type ChowChowRoute<T> = (ctx: BaseContext & T) => Promise<void> | void;
 export declare type ErrorHandler<T> = (error: any, ctx: BaseContext & T) => Promise<void> | void;
 export declare type RouterFn<T> = (app: Application, r: (route: ChowChowRoute<T>) => RequestHandler) => void;
-export declare class ChowChow<T extends BaseContext> {
+export declare class ChowChow<T extends BaseContext = BaseContext> {
     modules: Module[];
     private server;
     private routesToApply;
     private errorHandlers;
     private state;
-    static create(): ChowChow<BaseContext>;
+    static create<T extends BaseContext>(): ChowChow<T>;
     use(module: Module): ChowChow<T>;
     applyMiddleware(fn: ExpressFn): void;
     makeCtx(req: Request, res: Response, next: NextFunction): any;
