@@ -18,7 +18,9 @@ class ChowChow {
         this.handlersToApply = new Array();
         this.state = ChowChowState.stopped;
     }
-    static create() { return new ChowChow(); }
+    static create() {
+        return new ChowChow();
+    }
     use(module) {
         module.app = this;
         this.modules.push(module);
