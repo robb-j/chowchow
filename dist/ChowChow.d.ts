@@ -9,7 +9,7 @@ export declare type BaseContext = {
     next: NextFunction;
 };
 export interface Module {
-    app: ChowChow;
+    app: ChowChow<any>;
     checkEnvironment(): void;
     setupModule(): void;
     clearModule(): void;
@@ -23,19 +23,20 @@ export declare type ExpressHandler = (error: any, req: Request, res: Response, n
 export declare type ChowChowRoute<T> = (ctx: BaseContext & T) => Promise<void> | void;
 export declare type ErrorHandler<T> = (error: any, ctx: BaseContext & T) => Promise<void> | void;
 export declare type RouterFn<T> = (app: Application, r: (route: ChowChowRoute<T>) => RequestHandler) => void;
-export declare class ChowChow {
+export declare class ChowChow<T extends BaseContext> {
     modules: Module[];
     private server;
     private routesToApply;
-    private handlersToApply;
+    private errorHandlers;
     private state;
-    static create(): ChowChow;
-    use(module: Module): ChowChow;
+    static create(): ChowChow<BaseContext>;
+    use(module: Module): ChowChow<T>;
     applyMiddleware(fn: ExpressFn): void;
     makeCtx(req: Request, res: Response, next: NextFunction): any;
-    applyRoutes<T>(fn: RouterFn<T>): void;
-    applyErrorHandler<T>(fn: ErrorHandler<T>): void;
-    start({ verbose }: {
+    applyRoutes(fn: RouterFn<T>): void;
+    applyErrorHandler(fn: ErrorHandler<T>): void;
+    start({ verbose, port }: {
         verbose?: boolean | undefined;
+        port?: number | undefined;
     }): Promise<void>;
 }
