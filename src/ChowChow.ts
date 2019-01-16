@@ -18,7 +18,7 @@ export type BaseContext = {
 }
 
 export interface Module {
-  app: ChowChow
+  app: ChowChow<any>
   checkEnvironment(): void
   setupModule(): void
   clearModule(): void
@@ -49,18 +49,18 @@ export type RouterFn<T> = (
 
 const nameOf = (o: object) => o.constructor.name
 
-export class ChowChow {
+export class ChowChow<T extends BaseContext> {
   modules = new Array<Module>()
   private server = express()
   private routesToApply = new Array<RouterFn<any>>()
-  private handlersToApply = new Array<ErrorHandler<any>>()
+  private errorHandlers = new Array<ErrorHandler<any>>()
   private state = ChowChowState.stopped
 
   static create() {
     return new ChowChow()
   }
 
-  use(module: Module): ChowChow {
+  use(module: Module): ChowChow<T> {
     module.app = this
     this.modules.push(module)
     return this
@@ -78,21 +78,21 @@ export class ChowChow {
     return ctx
   }
 
-  applyRoutes<T>(fn: RouterFn<T>) {
+  applyRoutes(fn: RouterFn<T>) {
     if (this.state === ChowChowState.running) {
       throw new Error('Cannot add routes once running')
     }
     this.routesToApply.push(fn)
   }
 
-  applyErrorHandler<T>(fn: ErrorHandler<T>) {
+  applyErrorHandler(fn: ErrorHandler<T>) {
     if (this.state === ChowChowState.running) {
       throw new Error('Cannot add error handlers once running')
     }
-    this.handlersToApply.push(fn)
+    this.errorHandlers.push(fn)
   }
 
-  async start({ verbose = false }) {
+  async start({ verbose = false, port = 3000 }) {
     const logIfVerbose = verbose ? console.log : () => {}
 
     logIfVerbose('Checking environment')
@@ -102,7 +102,7 @@ export class ChowChow {
         module.checkEnvironment()
         logIfVerbose(' ✓ ' + nameOf(module))
       } catch (error) {
-        errors.push(' ⨉ ' + nameOf(module) + ': ' + error.message)
+        errors.push(' 𐄂 ' + nameOf(module) + ': ' + error.message)
       }
     }
 
@@ -135,15 +135,13 @@ export class ChowChow {
     }
     this.routesToApply = []
 
-    console.log('Adding handlers')
-    for (let fn of this.handlersToApply) {
-      this.server.use(((err, req, res, next) => {
-        fn(err, this.makeCtx(req, res, next))
-      }) as ExpressHandler)
-    }
-    this.handlersToApply = []
+    console.log('Adding error handler')
+    this.server.use(((err, req, res, next) => {
+      let ctx = this.makeCtx(req, res, next)
+      for (let handler of this.errorHandlers) handler(err, ctx)
+    }) as ExpressHandler)
 
-    await new Promise(resolve => this.server.listen(3000, resolve))
+    await new Promise(resolve => this.server.listen(port, resolve))
     this.state = ChowChowState.running
   }
 }
