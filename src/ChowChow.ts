@@ -135,7 +135,7 @@ export class ChowChow<T extends BaseContext = BaseContext> {
     }
     this.routesToApply = []
 
-    console.log('Adding error handler')
+    logIfVerbose('Adding error handler')
     this.server.use(((err, req, res, next) => {
       let ctx = this.makeCtx(req, res, next)
       for (let handler of this.errorHandlers) handler(err, ctx)
