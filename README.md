@@ -54,8 +54,8 @@ The context object is passed to your endpoints so you can easily use whatever yo
 ## A Module
 
 ```ts
-import { Module, ChowChow } from '@robb_j/chowchow'
-import express from 'express'
+import { ChowChow, Module, BaseContext } from '@robb_j/chowchow'
+import { Application } from 'express'
 
 // How the module modifies the context
 export type SampleContext = {}
@@ -80,7 +80,7 @@ export class SampleModule implements Module {
 
   // Once setup, allows the module to configure express however it needs
   // -> Each is ran in the order modules are applied
-  extendExpress(app: express.Application) {}
+  extendExpress(app: Application) {}
 
   // Override point for extending the context, called for each request
   // -> Its passed to current context and is expected to return its own modifications
