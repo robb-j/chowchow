@@ -67,7 +67,7 @@ class ChowChow {
         }
         logIfVerbose('Setting up modules');
         for (let module of this.modules) {
-            module.setupModule();
+            await module.setupModule();
             logIfVerbose(' ✓ ' + nameOf(module));
         }
         logIfVerbose('Extending express');
@@ -87,7 +87,7 @@ class ChowChow {
             });
         }
         this.routesToApply = [];
-        console.log('Adding error handler');
+        logIfVerbose('Adding error handler');
         this.server.use(((err, req, res, next) => {
             let ctx = this.makeCtx(req, res, next);
             for (let handler of this.errorHandlers)

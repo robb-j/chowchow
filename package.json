@@ -1,6 +1,6 @@
 {
   "name": "@robb_j/chowchow",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A modular express wrapper for typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

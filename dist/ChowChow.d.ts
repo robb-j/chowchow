@@ -11,7 +11,7 @@ export declare type BaseContext = {
 export interface Module {
     app: ChowChow;
     checkEnvironment(): void;
-    setupModule(): void;
+    setupModule(): void | Promise<void>;
     clearModule(): void;
     extendExpress(server: Application): void;
     extendEndpointContext(ctx: BaseContext): {
