@@ -20,7 +20,7 @@ export type BaseContext = {
 export interface Module {
   app: ChowChow
   checkEnvironment(): void
-  setupModule(): void
+  setupModule(): void | Promise<void>
   clearModule(): void
   extendExpress(server: Application): void
   extendEndpointContext(ctx: BaseContext): { [idx: string]: any }
@@ -113,7 +113,7 @@ export class ChowChow<T extends BaseContext = BaseContext> {
 
     logIfVerbose('Setting up modules')
     for (let module of this.modules) {
-      module.setupModule()
+      await module.setupModule()
       logIfVerbose(' ✓ ' + nameOf(module))
     }
 
