@@ -57,10 +57,16 @@ The context object is passed to your endpoints so you can easily use whatever yo
 import { Module, ChowChow } from '@robb_j/chowchow'
 import express from 'express'
 
-export class LoggerModule implements Module {
+// How the module modifies the context
+export type SampleContext = {}
+
+// The configuration for the module, useful as an exported type
+export type SampleConfig = {}
+
+export class SampleModule implements Module {
   app: ChowChow = null as any // Automatically set by ChowChow when applied
 
-  constructor(public config: any) {}
+  constructor(public config: SampleConfig) {}
 
   // A hook to throw errors if not configured
   // e.g. Check the correct config was passed or check environment variables are set
@@ -76,10 +82,11 @@ export class LoggerModule implements Module {
   // -> Each is ran in the order modules are applied
   extendExpress(app: express.Application) {}
 
-  // Override point for extending the context
-  // Its passed to current context and is expected to return its own modifications
-  extendEndpointContext(ctx: BaseContext) {
-    return { your: 'ctx' }
+  // Override point for extending the context, called for each request
+  // -> Its passed to current context and is expected to return its own modifications
+  // -> Forcing the return type means the module complies with whats expected of it
+  extendEndpointContext(ctx: BaseContext): SampleContext {
+    return { yourExtra: 'things' }
   }
 }
 ```
