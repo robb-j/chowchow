@@ -47,6 +47,8 @@ export type RouterFn<T> = (
   r: (route: ChowChowRoute<T>) => RequestHandler
 ) => void
 
+type Logger = (...args: any) => void
+
 const nameOf = (o: object) => o.constructor.name
 
 export class ChowChow<T extends BaseContext = BaseContext> {
@@ -92,10 +94,7 @@ export class ChowChow<T extends BaseContext = BaseContext> {
     this.errorHandlers.push(fn)
   }
 
-  async start({ verbose = false, port = 3000 }) {
-    const logIfVerbose = verbose ? console.log : () => {}
-
-    logIfVerbose('Checking environment')
+  private validateModules(logIfVerbose: Logger) {
     let errors = new Array<string>()
     for (let module of this.modules) {
       try {
@@ -110,6 +109,13 @@ export class ChowChow<T extends BaseContext = BaseContext> {
       errors.forEach(err => console.log(err))
       process.exit(1)
     }
+  }
+
+  async start({ verbose = false, port = 3000 }) {
+    const logIfVerbose = verbose ? console.log : () => {}
+
+    logIfVerbose('Checking environment')
+    this.validateModules(logIfVerbose)
 
     logIfVerbose('Setting up modules')
     for (let module of this.modules) {

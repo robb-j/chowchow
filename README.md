@@ -2,6 +2,8 @@
 
 A modular express wrapper for writing Typescript servers.
 
+[![Maintainability](https://api.codeclimate.com/v1/badges/d29511154762322d8c4c/maintainability)](https://codeclimate.com/github/robb-j/chowchow/maintainability)
+
 ```ts
 import { ChowChow, BaseContext } from '@robb_j/chowchow'
 import { SomeModule, SomeContext } from './SomeModule'
