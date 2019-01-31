@@ -13,12 +13,12 @@ class MockChowChow extends ChowChow {
 
   protected startServer(port: number): Promise<void> {
     this.startSpy(port)
-    return super.startServer(port)
+    return Promise.resolve()
   }
 
   protected stopServer(): Promise<void> {
     this.stopSpy()
-    return super.stopServer()
+    return Promise.resolve()
   }
 }
 
