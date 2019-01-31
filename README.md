@@ -10,35 +10,37 @@ import { SomeModule, SomeContext } from './SomeModule'
 
 // Generate your context once based on the modules you use
 type Context = BaseContext & SomeContext
+
+// Define your routes with a strongly type context
+// Which can be extended with module's contexts
+// ... think 'Add your models to the context'
+const yourRoute = async ({ res }: Context) => {
+  res.send({ msg: 'Hey!' })
+}
+
+// Any errors that're throw get caught for error handlers, even async ones
+const errorRoute = async (ctx: Context) => {
+  throw new Error('Oops')
+}
 ;(async () => {
   // Create an instance and apply modules
   let chow = ChowChow.create().use(new SomeModule({ anyArbitrary: 'config' }))
 
-  // Write endpoints with a dynamic strongly-typed context object
+  // Apply your routes straight to express, using a wrapper function 'r'
+  // Each route is passes a strongly-typed & extensible context object
   chow.applyRoutes<Context>((app, r) => {
-    app.get(
-      '/',
-      r(ctx => {
-        ctx.res.send({ msg: 'Hey!' })
-      })
-    )
-
-    // Async errors are caught, ready to be handled
-    app.get(
-      '/error',
-      r(async ctx => {
-        throw new Error('Oops')
-      })
-    )
+    app.get('/', r(yourRoute))
+    app.get('/error', r(errorRoute))
   })
 
-  // Handlers errors with the same strongly-typed context object
+  // Easily handle errors with the same strongly-typed context object
   chow.applyErrorHandler<Context>((err, ctx) => {
     if (err instanceof SomeError) ctx.res.send('SomeError happened')
     else ctx.res.status(400).send('Its broke')
   })
 
-  await chow.start()
+  // Then just start it up, with optional arguments
+  await chow.start({ port: 1337 })
   console.log('Listening on :3000')
 })()
 ```
