@@ -3,7 +3,6 @@
 A modular express wrapper for writing Typescript servers.
 
 [![CircleCI](https://circleci.com/gh/robb-j/chowchow.svg?style=svg)](https://circleci.com/gh/robb-j/chowchow)
-[![Maintainability](https://api.codeclimate.com/v1/badges/d29511154762322d8c4c/maintainability)](https://codeclimate.com/github/robb-j/chowchow/maintainability)
 
 ```ts
 import { ChowChow, BaseContext } from '@robb_j/chowchow'
