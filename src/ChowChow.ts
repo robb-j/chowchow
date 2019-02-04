@@ -90,6 +90,11 @@ export class ChowChow<T extends BaseContext = BaseContext> {
     return this
   }
 
+  /** Whether a module is registered */
+  has(ModuleType: Function): boolean {
+    return this.modules.some(m => m instanceof ModuleType)
+  }
+
   /** Apply middleware to the internal express app. */
   applyMiddleware(fn: ExpressFn) {
     fn(this.expressApp)
