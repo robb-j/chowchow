@@ -108,6 +108,9 @@ chow.applyErrorHandler((err, ctx) => {
 })
 ```
 
+An added benefit of this is that it'll catch asynchronous errors too
+and anything that get's passed to express's `next`.
+
 ## Example app
 
 Here's an example app which uses ChowChow and a custom module `SomeModule.ts`
