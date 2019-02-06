@@ -28,8 +28,10 @@ Your route could look like this:
 **routes.ts**
 
 ```ts
+import { Context } from './types'
+
 // An example ChowChow endpoint which checks authentication and queries products
-export async function listProducts({ req, res, jwt, models }: AppContext) {
+export async function listProducts({ req, res, jwt, models }: Context) {
   if (!jwt) throw new Error('Bad Auth')
   const query = req.query.id ? { id: req.query.id } : {}
   res.send({ products: await models.Product.find(query) })
