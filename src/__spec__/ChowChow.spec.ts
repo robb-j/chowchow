@@ -23,7 +23,7 @@ class MockChowChow extends ChowChow {
 }
 
 class FakeModule implements Module {
-  app: ChowChow = {} as any
+  app!: ChowChow
 
   checkEnvironment() {}
   setupModule() {}
@@ -69,7 +69,7 @@ class SpyModule extends FakeModule {
 }
 
 describe('ChowChow', () => {
-  let chow: MockChowChow & ChowChowInternals
+  let chow!: MockChowChow & ChowChowInternals
 
   beforeEach(async () => {
     chow = new MockChowChow() as any
@@ -131,6 +131,15 @@ describe('ChowChow', () => {
 
       const applyingRoutes = () => chow.applyRoutes(() => {})
       expect(applyingRoutes).toThrow()
+    })
+    it('should skip while setting up', () => {
+      chow.state = ChowChowState.setup
+
+      let spy = jest.fn()
+      chow.applyRoutes(spy)
+
+      expect(chow.routesToApply).toHaveLength(0)
+      expect(spy.mock.calls).toHaveLength(1)
     })
   })
 
