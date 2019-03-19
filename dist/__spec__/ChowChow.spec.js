@@ -21,9 +21,6 @@ class MockChowChow extends ChowChow_1.ChowChow {
     }
 }
 class FakeModule {
-    constructor() {
-        this.app = {};
-    }
     checkEnvironment() { }
     setupModule() { }
     clearModule() { }
@@ -119,6 +116,13 @@ describe('ChowChow', () => {
             await chow.start();
             const applyingRoutes = () => chow.applyRoutes(() => { });
             expect(applyingRoutes).toThrow();
+        });
+        it('should skip while setting up', () => {
+            chow.state = ChowChow_1.ChowChowState.setup;
+            let spy = jest.fn();
+            chow.applyRoutes(spy);
+            expect(chow.routesToApply).toHaveLength(0);
+            expect(spy.mock.calls).toHaveLength(1);
         });
     });
     describe('#applyErrorHandler', () => {

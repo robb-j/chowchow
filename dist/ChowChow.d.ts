@@ -2,6 +2,7 @@ import stoppable from 'stoppable';
 import express, { Application, Request, Response, NextFunction, RequestHandler } from 'express';
 export declare enum ChowChowState {
     stopped = "stopped",
+    setup = "setup",
     running = "running"
 }
 export declare type BaseContext = {
@@ -31,7 +32,7 @@ export declare type ErrorHandler<T> = (error: any, ctx: BaseContext & T) => Prom
 export declare type RouterFn<T> = (app: Application, r: (route: ChowChowRoute<T>) => RequestHandler) => void;
 /** An interface to expose ChowChow internals for testing purposes */
 export interface ChowChowInternals {
-    state: ChowChowState.stopped;
+    state: ChowChowState;
     modules: Array<Module>;
     httpServer: stoppable.StoppableServer;
     expressApp: express.Express;
@@ -82,6 +83,8 @@ export declare class ChowChow<T extends BaseContext = BaseContext> {
     }): Promise<void>;
     /** Stop chowchow, clearing modules, stopping the server and resetting it. */
     stop(): Promise<void>;
+    /** Register a route with express by calling its generator */
+    protected registerRoute(fn: RouterFn<T>): void;
     /** Internal method to start the express server (overriden in tests) */
     protected startServer(port: number): Promise<void>;
     /** Internal method to stop the express server (overriden in tests) */

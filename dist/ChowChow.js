@@ -9,6 +9,7 @@ const express_1 = __importDefault(require("express"));
 var ChowChowState;
 (function (ChowChowState) {
     ChowChowState["stopped"] = "stopped";
+    ChowChowState["setup"] = "setup";
     ChowChowState["running"] = "running";
 })(ChowChowState = exports.ChowChowState || (exports.ChowChowState = {}));
 const nameOf = (o) => o.constructor.name;
@@ -56,10 +57,14 @@ class ChowChow {
       It will throw if chowchow is already started.
     */
     applyRoutes(fn) {
-        if (this.state === ChowChowState.running) {
-            throw new Error('Cannot add routes once running');
+        switch (this.state) {
+            case ChowChowState.running:
+                throw new Error('Cannot add routes once running');
+            case ChowChowState.setup:
+                return this.registerRoute(fn);
+            default:
+                this.routesToApply.push(fn);
         }
-        this.routesToApply.push(fn);
     }
     /**
       Register chowchow error handlers with a generator,
@@ -79,6 +84,7 @@ class ChowChow {
     */
     async start({ verbose = false, port = 3000, logErrors = true } = {}) {
         const logIfVerbose = verbose ? console.log : () => { };
+        this.state = ChowChowState.setup;
         // Check each module's environment and fail if any of those callbacks throw
         logIfVerbose('Checking environment');
         let invalidEnvironment = false;
@@ -111,14 +117,7 @@ class ChowChow {
         // Apply routes using their generators
         logIfVerbose('Adding routes');
         for (let fn of this.routesToApply) {
-            fn(this.expressApp, route => async (req, res, next) => {
-                try {
-                    await route(this.makeCtx(req, res, next));
-                }
-                catch (error) {
-                    next(error);
-                }
-            });
+            this.registerRoute(fn);
         }
         this.routesToApply = [];
         // Apply error handlers using their generators
@@ -146,6 +145,17 @@ class ChowChow {
         // Reset the app & server to avoid strange configuration
         this.expressApp = express_1.default();
         this.httpServer = stoppable_1.default(http_1.createServer(this.expressApp));
+    }
+    /** Register a route with express by calling its generator */
+    registerRoute(fn) {
+        fn(this.expressApp, route => async (req, res, next) => {
+            try {
+                await route(this.makeCtx(req, res, next));
+            }
+            catch (error) {
+                next(error);
+            }
+        });
     }
     /** Internal method to start the express server (overriden in tests) */
     startServer(port) {
