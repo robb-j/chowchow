@@ -70,7 +70,7 @@ export type SampleContext = {}
 export type SampleConfig = {}
 
 export class SampleModule implements Module {
-  app: ChowChow = null as any // Automatically set by ChowChow when applied
+  app!: ChowChow // Automatically set by ChowChow when applied
 
   // An optional custom constructor to create your module
   constructor(public config: SampleConfig) {}
