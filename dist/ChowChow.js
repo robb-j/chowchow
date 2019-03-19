@@ -34,6 +34,10 @@ class ChowChow {
         this.modules.push(module);
         return this;
     }
+    /** Whether a module is registered */
+    has(ModuleType) {
+        return this.modules.some(m => m instanceof ModuleType);
+    }
     /** Apply middleware to the internal express app. */
     applyMiddleware(fn) {
         fn(this.expressApp);

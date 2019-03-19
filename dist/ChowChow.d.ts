@@ -52,6 +52,8 @@ export declare class ChowChow<T extends BaseContext = BaseContext> {
       Modules callbacks are called in chronological order on setup
       and reverse chronological order in teardown. */
     use(module: Module): ChowChow<T>;
+    /** Whether a module is registered */
+    has(ModuleType: Function): boolean;
     /** Apply middleware to the internal express app. */
     applyMiddleware(fn: ExpressFn): void;
     /** Generate a chowchow context based on the current modules. */
