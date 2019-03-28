@@ -60,8 +60,6 @@ class ChowChow {
         switch (this.state) {
             case ChowChowState.running:
                 throw new Error('Cannot add routes once running');
-            case ChowChowState.setup:
-                return this.registerRoute(fn);
             default:
                 this.routesToApply.push(fn);
         }
@@ -85,7 +83,9 @@ class ChowChow {
     async start({ verbose = false, port = 3000, logErrors = true } = {}) {
         const logIfVerbose = verbose ? console.log : () => { };
         this.state = ChowChowState.setup;
-        // Check each module's environment and fail if any of those callbacks throw
+        //
+        // Check each module's environment, catching errors (for now)
+        //
         logIfVerbose('Checking environment');
         let invalidEnvironment = false;
         for (let module of this.modules) {
@@ -100,34 +100,56 @@ class ChowChow {
                 invalidEnvironment = true;
             }
         }
+        //
+        // Fail if any module's environment was invalid
+        //
         if (invalidEnvironment)
             throw new Error('Invalid environment');
+        //
+        // Remember what routes have been registered upto this point
+        //
+        const existingRoutes = this.routesToApply;
+        this.routesToApply = [];
+        //
         // Setup each module
+        //
         logIfVerbose('Setting up modules');
         for (let module of this.modules) {
             await module.setupModule();
             logIfVerbose(' ✓ ' + nameOf(module));
         }
+        //
         // Let each module extend express
+        //
         logIfVerbose('Extending express');
         for (let module of this.modules) {
             module.extendExpress(this.expressApp);
             logIfVerbose(' ✓ ' + nameOf(module));
         }
-        // Apply routes using their generators
+        //
+        // Put routes registered in modules before those previously registered
+        //
+        this.routesToApply = this.routesToApply.concat(existingRoutes);
+        //
+        // Apply routes by calling their generator
+        //
         logIfVerbose('Adding routes');
         for (let fn of this.routesToApply) {
             this.registerRoute(fn);
         }
         this.routesToApply = [];
-        // Apply error handlers using their generators
+        //
+        // Create an express error handler which uses the registered handlers
+        //
         logIfVerbose('Adding error handler');
         this.expressApp.use(((err, req, res, next) => {
             let ctx = this.makeCtx(req, res, next);
             for (let handler of this.errorHandlers)
                 handler(err, ctx);
         }));
+        //
         // Startup the http server
+        //
         await this.startServer(port);
         this.state = ChowChowState.running;
     }

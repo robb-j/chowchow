@@ -39,6 +39,11 @@ class BadEnvModule extends FakeModule {
         throw new Error('Bad Env');
     }
 }
+const makeRouteModule = (spy) => class RouteModule extends FakeModule {
+    setupModule() {
+        this.app.applyRoutes(spy);
+    }
+};
 class SpyModule extends FakeModule {
     constructor() {
         super(...arguments);
@@ -117,13 +122,6 @@ describe('ChowChow', () => {
             const applyingRoutes = () => chow.applyRoutes(() => { });
             expect(applyingRoutes).toThrow();
         });
-        it('should skip while setting up', () => {
-            chow.state = ChowChow_1.ChowChowState.setup;
-            let spy = jest.fn();
-            chow.applyRoutes(spy);
-            expect(chow.routesToApply).toHaveLength(0);
-            expect(spy.mock.calls).toHaveLength(1);
-        });
     });
     describe('#applyErrorHandler', () => {
         it('should store the generator', async () => {
@@ -190,6 +188,26 @@ describe('ChowChow', () => {
         it('should update the state', async () => {
             await chow.start();
             expect(chow.state).toBe(ChowChow_1.ChowChowState.running);
+        });
+        it('should apply module routes first', async () => {
+            const calls = new Array();
+            const spyA = jest.fn(() => calls.push('A'));
+            const spyB = jest.fn(() => calls.push('B'));
+            const RouteModule = makeRouteModule(spyA);
+            chow.applyRoutes(spyB);
+            await chow.use(new RouteModule()).start();
+            expect(calls).toEqual(['A', 'B']);
+        });
+        it('should add module routes after calling #extendExpress', async () => {
+            const calls = new Array();
+            const spy = jest.fn(() => calls.push('B'));
+            const RouteModule = class extends makeRouteModule(spy) {
+                extendExpress() {
+                    calls.push('A');
+                }
+            };
+            await chow.use(new RouteModule()).start();
+            expect(calls).toEqual(['A', 'B']);
         });
     });
     describe('#stop', () => {
