@@ -47,6 +47,13 @@ class BadEnvModule extends FakeModule {
   }
 }
 
+const makeRouteModule = (spy: any) =>
+  class RouteModule extends FakeModule {
+    setupModule() {
+      this.app.applyRoutes(spy)
+    }
+  }
+
 class SpyModule extends FakeModule {
   setupSpy = jest.fn()
   clearSpy = jest.fn()
@@ -132,15 +139,6 @@ describe('ChowChow', () => {
       const applyingRoutes = () => chow.applyRoutes(() => {})
       expect(applyingRoutes).toThrow()
     })
-    it('should skip while setting up', () => {
-      chow.state = ChowChowState.setup
-
-      let spy = jest.fn()
-      chow.applyRoutes(spy)
-
-      expect(chow.routesToApply).toHaveLength(0)
-      expect(spy.mock.calls).toHaveLength(1)
-    })
   })
 
   describe('#applyErrorHandler', () => {
@@ -219,6 +217,32 @@ describe('ChowChow', () => {
     it('should update the state', async () => {
       await chow.start()
       expect(chow.state).toBe(ChowChowState.running)
+    })
+    it('should apply module routes first', async () => {
+      const calls = new Array<string>()
+      const spyA = jest.fn(() => calls.push('A'))
+      const spyB = jest.fn(() => calls.push('B'))
+
+      const RouteModule = makeRouteModule(spyA)
+      chow.applyRoutes(spyB)
+
+      await chow.use(new RouteModule()).start()
+
+      expect(calls).toEqual(['A', 'B'])
+    })
+    it('should add module routes after calling #extendExpress', async () => {
+      const calls = new Array<string>()
+      const spy = jest.fn(() => calls.push('B'))
+
+      const RouteModule = class extends makeRouteModule(spy) {
+        extendExpress() {
+          calls.push('A')
+        }
+      }
+
+      await chow.use(new RouteModule()).start()
+
+      expect(calls).toEqual(['A', 'B'])
     })
   })
 
