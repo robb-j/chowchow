@@ -4,13 +4,24 @@ A modular express wrapper for writing Typescript servers.
 
 [![CircleCI](https://circleci.com/gh/robb-j/chowchow.svg?style=svg)](https://circleci.com/gh/robb-j/chowchow)
 
-## Table of Contents
+<!-- toc-head -->
 
+## Table of contents
+
+- [Extra documentation](#extra-documentation)
 - [Why ChowChow](#why-chowchow)
 - [How it works](#how-it-works)
-- [Example app](#example-app)
-- [Example Modules](#example-modules)
-- [A Module](#a-module)
+- [An example app](#an-example-app)
+- [Example modules](#example-modules)
+- [Official modules](#official-modules)
+
+<!-- toc-tail -->
+
+## Extra documentation
+
+- [Development →](/docs/development.md)
+- [Modules →](/docs/modules.md)
+- [Testing →](/docs/testing.md)
 
 ## Why ChowChow
 
@@ -47,7 +58,7 @@ this lets you easily access properties on it and maintain types.
 
 **types.ts**
 
-```ts
+```js
 import { BaseContext } from '@robb_j/chowchow'
 import { LoggerContext } from '@robb_j/chowchow-logger'
 import { AuthContext } from '@robb_j/chowchow-auth'
@@ -111,7 +122,7 @@ chow.applyErrorHandler((err, ctx) => {
 An added benefit of this is that it'll catch asynchronous errors too
 and anything that get's passed to express's `next`.
 
-## Example app
+## An example app
 
 Here's an example app which uses ChowChow and a custom module `SomeModule.ts`
 so you can see how it all fits together
@@ -130,9 +141,9 @@ const yourRoute = async ({ res }: Context) => {
 }
 
 // Any errors get caught for your error handlers, even async ones
-const errorRoute = async (ctx: Context) => {
-    throw new Error('Oops')
-  }
+async function errorRoute(ctx: Context) => {
+  throw new Error('Oops')
+}
 
   // App entrypoint
 ;(async () => {
@@ -161,7 +172,7 @@ const errorRoute = async (ctx: Context) => {
 })()
 ```
 
-## Example Modules
+## Example modules
 
 Modules have hooks to configure the express server, add middleware and modify the context object.
 
@@ -169,42 +180,6 @@ Modules have hooks to configure the express server, add middleware and modify th
 - I18N module to adds an i18n object to the context
 - Mongoose module, adds your models to the context
 
-## A Module
+## Official modules
 
-```ts
-import { ChowChow, Module, BaseContext } from '@robb_j/chowchow'
-import { Application } from 'express'
-
-// How the module modifies the context
-export type SampleContext = {}
-
-// The configuration for the module, useful as an exported type
-export type SampleConfig = {}
-
-export class SampleModule implements Module {
-  app!: ChowChow // Automatically set by ChowChow when applied
-
-  // An optional custom constructor to create your module
-  constructor(public config: SampleConfig) {}
-
-  // A hook to throw errors if not configured
-  // e.g. Check the config or that environment variables are set
-  checkEnvironment() {}
-
-  // Called once all #checkEnvironment calls pass to setup the module
-  setupModule() {}
-
-  // Called when ChowChow is stopped and to tidy up the module
-  clearModule() {}
-
-  // This hook allows the module to configure express, ran in the order modules are applied
-  extendExpress(app: Application) {}
-
-  // Override point for extending the context, called for each request
-  // -> Its passed to current context and is expected to return its own modifications
-  // -> Forcing the return type means the module complies with whats expected of it
-  extendEndpointContext(ctx: BaseContext): SampleContext {
-    return { yourExtra: 'things' }
-  }
-}
-```
+To see what official modules [search on GitHub →](https://github.com/robb-j?utf8=%E2%9C%93&tab=repositories&q=chowchow-*&type=&language=)

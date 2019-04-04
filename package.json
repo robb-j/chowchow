@@ -10,10 +10,8 @@
     "coverage": "jest --coverage",
     "preversion": "npm test -s && npm run build && git add dist",
     "prettier": "prettier --write ./**/*.{js,ts,tsx,json,css,md}",
-    "start": "node -r dotenv/config dist/index.js",
     "test": "jest",
-    "dev:once": "ts-node -r dotenv/config src/index.ts",
-    "dev:watch": "nodemon -w src -e ts -x 'npx ts-node -r dotenv/config' src/index.ts"
+    "gen:toc": "md-toc -i"
   },
   "keywords": [
     "express",
@@ -48,6 +46,7 @@
     "stoppable": "^1.1.0"
   },
   "devDependencies": {
+    "@robb_j/md-toc": "^0.3.0",
     "@types/express": "^4.16.0",
     "@types/jest": "^23.3.12",
     "@types/node": "^10.12.12",
