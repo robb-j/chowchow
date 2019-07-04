@@ -5,6 +5,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ChowChow_1 = require("../ChowChow");
 const supertest_1 = __importDefault(require("supertest"));
+class FakeModule {
+    checkEnvironment() { }
+    setupModule() { }
+    clearModule() { }
+    extendExpress() { }
+    extendEndpointContext() {
+        return {};
+    }
+}
+class CtxModule extends FakeModule {
+    extendEndpointContext() {
+        return { name: 'geoff' };
+    }
+}
 class MockChowChow extends ChowChow_1.ChowChow {
     constructor() {
         super(...arguments);
@@ -18,20 +32,6 @@ class MockChowChow extends ChowChow_1.ChowChow {
     stopServer() {
         this.stopSpy();
         return Promise.resolve();
-    }
-}
-class FakeModule {
-    checkEnvironment() { }
-    setupModule() { }
-    clearModule() { }
-    extendExpress() { }
-    extendEndpointContext() {
-        return {};
-    }
-}
-class CtxModule extends FakeModule {
-    extendEndpointContext() {
-        return { name: 'geoff' };
     }
 }
 class BadEnvModule extends FakeModule {
@@ -158,7 +158,9 @@ describe('ChowChow', () => {
             expect(spy.expressSpy.mock.calls).toHaveLength(1);
         });
         it('should apply routes to express', async () => {
-            let route = jest.fn(({ res }) => res.send('hey'));
+            let route = jest.fn(async ({ res }) => {
+                res.send('hey');
+            });
             chow.applyRoutes((app, r) => {
                 app.get('/', r(route));
             });
@@ -172,7 +174,9 @@ describe('ChowChow', () => {
             let route = jest.fn(() => {
                 throw new Error('Something went wrong');
             });
-            let errorHandler = jest.fn((err, ctx) => ctx.res.send());
+            let errorHandler = jest.fn(async (err, ctx) => {
+                ctx.res.send();
+            });
             chow.applyErrorHandler(errorHandler);
             chow.applyRoutes((app, r) => {
                 app.get('/', r(route));
