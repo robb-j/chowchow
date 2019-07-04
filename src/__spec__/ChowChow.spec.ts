@@ -7,21 +7,6 @@ import {
 } from '../ChowChow'
 import supertest from 'supertest'
 
-class MockChowChow extends ChowChow {
-  startSpy = jest.fn()
-  stopSpy = jest.fn()
-
-  protected startServer(port: number): Promise<void> {
-    this.startSpy(port)
-    return Promise.resolve()
-  }
-
-  protected stopServer(): Promise<void> {
-    this.stopSpy()
-    return Promise.resolve()
-  }
-}
-
 class FakeModule implements Module {
   app!: ChowChow
 
@@ -38,6 +23,23 @@ type CtxModuleCtx = { name: string }
 class CtxModule extends FakeModule {
   extendEndpointContext(): CtxModuleCtx {
     return { name: 'geoff' }
+  }
+}
+
+type TestContext = BaseContext & CtxModuleCtx
+
+class MockChowChow extends ChowChow<TestContext> {
+  startSpy = jest.fn()
+  stopSpy = jest.fn()
+
+  protected startServer(port: number): Promise<void> {
+    this.startSpy(port)
+    return Promise.resolve()
+  }
+
+  protected stopServer(): Promise<void> {
+    this.stopSpy()
+    return Promise.resolve()
   }
 }
 
@@ -178,7 +180,9 @@ describe('ChowChow', () => {
       expect(spy.expressSpy.mock.calls).toHaveLength(1)
     })
     it('should apply routes to express', async () => {
-      let route = jest.fn(({ res }: BaseContext) => res.send('hey'))
+      let route = jest.fn(async ({ res }: BaseContext) => {
+        res.send('hey')
+      })
 
       chow.applyRoutes((app, r) => {
         app.get('/', r(route))
@@ -196,7 +200,9 @@ describe('ChowChow', () => {
         throw new Error('Something went wrong')
       })
 
-      let errorHandler = jest.fn((err, ctx: BaseContext) => ctx.res.send())
+      let errorHandler = jest.fn(async (err, ctx: TestContext) => {
+        ctx.res.send()
+      })
       chow.applyErrorHandler(errorHandler)
 
       chow.applyRoutes((app, r) => {
