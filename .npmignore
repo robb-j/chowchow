@@ -3,3 +3,4 @@
 .prettierrc.yml
 jest.config.js
 *.spec.ts
+coverage
