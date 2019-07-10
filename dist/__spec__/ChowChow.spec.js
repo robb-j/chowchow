@@ -142,7 +142,7 @@ describe('ChowChow', () => {
         });
         it('should start express', async () => {
             await chow.start();
-            expect(chow.startSpy.mock.calls).toHaveLength(1);
+            expect(chow.startSpy).toBeCalled();
         });
         it('should fail for bad environments', async () => {
             chow.use(new BadEnvModule());
@@ -151,11 +151,11 @@ describe('ChowChow', () => {
         });
         it('should call #setupModule on modules', async () => {
             await chow.start();
-            expect(spy.setupSpy.mock.calls).toHaveLength(1);
+            expect(spy.setupSpy).toBeCalled();
         });
         it('should call #extendExpress on modules', async () => {
             await chow.start();
-            expect(spy.expressSpy.mock.calls).toHaveLength(1);
+            expect(spy.expressSpy).toBeCalled();
         });
         it('should apply routes to express', async () => {
             let route = jest.fn(async ({ res }) => {
@@ -168,7 +168,7 @@ describe('ChowChow', () => {
             let agent = supertest_1.default(chow.expressApp);
             let res = await agent.get('/');
             expect(res.status).toBe(200);
-            expect(route.mock.calls).toHaveLength(1);
+            expect(route).toBeCalled();
         });
         it('should register error handlers', async () => {
             let route = jest.fn(() => {
@@ -185,7 +185,7 @@ describe('ChowChow', () => {
             await chow.start();
             let agent = supertest_1.default(chow.expressApp);
             await agent.get('/');
-            expect(errorHandler.mock.calls).toHaveLength(1);
+            expect(errorHandler).toBeCalled();
             expect(errorHandler.mock.calls[0][0]).toBeInstanceOf(Error);
             expect(errorHandler.mock.calls[0][1].name).toBe('geoff');
         });
@@ -223,11 +223,20 @@ describe('ChowChow', () => {
         });
         it('should close express', async () => {
             await chow.stop();
-            expect(chow.stopSpy.mock.calls).toHaveLength(1);
+            expect(chow.stopSpy).toBeCalled();
         });
         it('should call #clearModule on modules', async () => {
             await chow.stop();
-            expect(spyModule.clearSpy.mock.calls).toHaveLength(1);
+            expect(spyModule.clearSpy).toBeCalled();
+        });
+        it('should wait for module#clearModule to resolve', async () => {
+            let awaited = false;
+            spyModule.clearModule = jest.fn(async () => {
+                await new Promise(resolve => process.nextTick(resolve));
+                awaited = true;
+            });
+            await chow.stop();
+            expect(awaited).toBe(true);
         });
         it('should update the state', async () => {
             await chow.stop();

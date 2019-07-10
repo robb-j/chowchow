@@ -15,7 +15,7 @@ export interface Module {
     app: ChowChow;
     checkEnvironment(): void;
     setupModule(): void | Promise<void>;
-    clearModule(): void;
+    clearModule(): void | Promise<void>;
     extendExpress(expressApp: Application): void;
     extendEndpointContext(ctx: BaseContext): {
         [idx: string]: any;

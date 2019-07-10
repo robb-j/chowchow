@@ -159,7 +159,7 @@ class ChowChow {
             return;
         // Clear each module in reverse order
         for (let module of this.modules.reverse()) {
-            module.clearModule();
+            await module.clearModule();
         }
         // Stop the http server
         await this.stopServer();
