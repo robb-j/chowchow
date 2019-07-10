@@ -26,7 +26,7 @@ export interface Module {
   app: ChowChow
   checkEnvironment(): void
   setupModule(): void | Promise<void>
-  clearModule(): void
+  clearModule(): void | Promise<void>
   extendExpress(expressApp: Application): void
   extendEndpointContext(ctx: BaseContext): { [idx: string]: any }
 }
@@ -230,7 +230,7 @@ export class ChowChow<T extends BaseContext = BaseContext> {
 
     // Clear each module in reverse order
     for (let module of this.modules.reverse()) {
-      module.clearModule()
+      await module.clearModule()
     }
 
     // Stop the http server
