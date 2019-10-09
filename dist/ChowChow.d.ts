@@ -39,6 +39,9 @@ export interface ChowChowInternals {
     routesToApply: Array<RouterFn<any>>;
     errorHandlers: Array<ErrorHandler<any>>;
 }
+interface Constructor<T> {
+    new (...args: any[]): T;
+}
 /** The chowchow app, where everything chowchow starts */
 export declare class ChowChow<T extends BaseContext = BaseContext> {
     protected state: ChowChowState;
@@ -56,7 +59,7 @@ export declare class ChowChow<T extends BaseContext = BaseContext> {
     /** Whether a module is registered */
     has(ModuleType: Function): boolean;
     /** Get a registered module */
-    getModule<T extends Function>(ModuleType: T): T | undefined;
+    getModule<T extends Module>(ModuleType: Constructor<T>): T | undefined;
     /** Apply middleware to the internal express app. */
     applyMiddleware(fn: ExpressFn): void;
     /** Generate a chowchow context based on the current modules. */
@@ -92,3 +95,4 @@ export declare class ChowChow<T extends BaseContext = BaseContext> {
     /** Internal method to stop the express server (overriden in tests) */
     protected stopServer(): Promise<void>;
 }
+export {};
