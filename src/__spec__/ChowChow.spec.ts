@@ -115,9 +115,11 @@ describe('ChowChow', () => {
 
   describe('#getModule', () => {
     it('should return the module', () => {
-      let m = new FakeModule()
-      chow.use(m)
-      expect(chow.getModule(FakeModule)).toEqual(m)
+      let fakeModule = new FakeModule()
+      chow.use(fakeModule)
+
+      let result = chow.getModule(FakeModule)
+      expect(result).toEqual(fakeModule)
     })
   })
 

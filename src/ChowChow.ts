@@ -68,6 +68,10 @@ export interface ChowChowInternals {
   errorHandlers: Array<ErrorHandler<any>>
 }
 
+interface Constructor<T> {
+  new (...args: any[]): T
+}
+
 /** The chowchow app, where everything chowchow starts */
 export class ChowChow<T extends BaseContext = BaseContext> {
   protected state = ChowChowState.stopped
@@ -97,7 +101,7 @@ export class ChowChow<T extends BaseContext = BaseContext> {
   }
 
   /** Get a registered module */
-  getModule<T extends Function>(ModuleType: T): T | undefined {
+  getModule<T extends Module>(ModuleType: Constructor<T>): T | undefined {
     return this.modules.find(m => m instanceof ModuleType) as any
   }
 
