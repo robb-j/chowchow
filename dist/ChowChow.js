@@ -39,6 +39,10 @@ class ChowChow {
     has(ModuleType) {
         return this.modules.some(m => m instanceof ModuleType);
     }
+    /** Get a registered module */
+    getModule(ModuleType) {
+        return this.modules.find(m => m instanceof ModuleType);
+    }
     /** Apply middleware to the internal express app. */
     applyMiddleware(fn) {
         fn(this.expressApp);
