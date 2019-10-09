@@ -80,7 +80,7 @@ class SpyModule extends FakeModule {
 describe('ChowChow', () => {
   let chow!: MockChowChow & ChowChowInternals
 
-  beforeEach(async () => {
+  beforeEach(() => {
     chow = new MockChowChow() as any
   })
 
@@ -89,27 +89,48 @@ describe('ChowChow', () => {
   })
 
   describe('::create', () => {
-    it('should create an instance', async () => {
+    it('should create an instance', () => {
       expect(ChowChow.create()).toBeDefined()
     })
   })
 
   describe('#use', () => {
-    it('should register the module', async () => {
+    it('should register the module', () => {
       chow.use(new FakeModule())
       expect(chow.modules).toHaveLength(1)
     })
-    it('should put chowchow onto the module', async () => {
+    it('should put chowchow onto the module', () => {
       let module = new FakeModule()
       chow.use(module)
       expect(module.app).toBe(chow)
     })
   })
 
-  describe('#applyMiddleware', () => {})
+  describe('#has', () => {
+    it('should return true when a module is registered', () => {
+      chow.use(new FakeModule())
+      expect(chow.has(FakeModule)).toBeTruthy()
+    })
+  })
+
+  describe('#getModule', () => {
+    it('should return the module', () => {
+      let m = new FakeModule()
+      chow.use(m)
+      expect(chow.getModule(FakeModule)).toEqual(m)
+    })
+  })
+
+  describe('#applyMiddleware', () => {
+    it('should call the handler with the express app', () => {
+      let spy = jest.fn()
+      chow.applyMiddleware(spy)
+      expect(spy).toBeCalledWith(chow.expressApp)
+    })
+  })
 
   describe('#makeCtx', () => {
-    it('should have the req, res and next', async () => {
+    it('should have the req, res and next', () => {
       let req: any = {}
       let res: any = {}
       let next: any = () => {}
@@ -118,7 +139,7 @@ describe('ChowChow', () => {
       expect(ctx.res).toBe(res)
       expect(ctx.next).toBe(next)
     })
-    it('should use modules to generate a context', async () => {
+    it('should use modules to generate a context', () => {
       chow.use(new CtxModule())
       let ctx = chow.makeCtx({} as any, {} as any, () => {})
       expect(ctx.name).toBe('geoff')
@@ -126,11 +147,11 @@ describe('ChowChow', () => {
   })
 
   describe('#applyRoutes', () => {
-    it('should store route generator', async () => {
+    it('should store route generator', () => {
       chow.applyRoutes(jest.fn())
       expect(chow.routesToApply).toHaveLength(1)
     })
-    it('should not call the generator', async () => {
+    it('should not call the generator', () => {
       let spy = jest.fn()
       chow.applyRoutes(spy)
       expect(spy.mock.calls).toHaveLength(0)
@@ -144,11 +165,11 @@ describe('ChowChow', () => {
   })
 
   describe('#applyErrorHandler', () => {
-    it('should store the generator', async () => {
+    it('should store the generator', () => {
       chow.applyErrorHandler(jest.fn())
       expect(chow.errorHandlers).toHaveLength(1)
     })
-    it('should not call the generator', async () => {
+    it('should not call the generator', () => {
       let spy = jest.fn()
       chow.applyErrorHandler(spy)
       expect(spy.mock.calls).toHaveLength(0)
@@ -157,7 +178,7 @@ describe('ChowChow', () => {
 
   describe('#start', () => {
     let spy: SpyModule
-    beforeEach(async () => {
+    beforeEach(() => {
       spy = new SpyModule()
       chow.use(spy)
     })
@@ -180,7 +201,7 @@ describe('ChowChow', () => {
       expect(spy.expressSpy).toBeCalled()
     })
     it('should apply routes to express', async () => {
-      let route = jest.fn(async ({ res }: BaseContext) => {
+      let route = jest.fn(({ res }: BaseContext) => {
         res.send('hey')
       })
 
@@ -200,7 +221,7 @@ describe('ChowChow', () => {
         throw new Error('Something went wrong')
       })
 
-      let errorHandler = jest.fn(async (err, ctx: TestContext) => {
+      let errorHandler = jest.fn((err, ctx: TestContext) => {
         ctx.res.send()
       })
       chow.applyErrorHandler(errorHandler)

@@ -96,6 +96,11 @@ export class ChowChow<T extends BaseContext = BaseContext> {
     return this.modules.some(m => m instanceof ModuleType)
   }
 
+  /** Get a registered module */
+  getModule<T extends Function>(ModuleType: T): T | undefined {
+    return this.modules.find(m => m instanceof ModuleType) as any
+  }
+
   /** Apply middleware to the internal express app. */
   applyMiddleware(fn: ExpressFn) {
     fn(this.expressApp)
