@@ -10,13 +10,16 @@ export type PugContext = {
   sendPug(templateName: string, locals?: any): void
 }
 
+export type TemplateParams = { [prop: string]: any }
+
 export type PugTemplates = {
-  [templateName: string]: (locals: { [prop: string]: any }) => string
+  [templateName: string]: (locals: TemplateParams) => string
 }
 
 export type PugOptions = {
   templateDir: string
   hotReloadInDev?: boolean
+  globals?: TemplateParams
 }
 
 export class PugModule implements Module {
@@ -24,10 +27,16 @@ export class PugModule implements Module {
   templateDir: string
   hotReload: boolean
   templates: PugTemplates
+  globals: TemplateParams
 
-  constructor({ templateDir, hotReloadInDev = false }: PugOptions) {
+  constructor({
+    templateDir,
+    hotReloadInDev = true,
+    globals = {}
+  }: PugOptions) {
     this.templateDir = templateDir
     this.templates = {}
+    this.globals = globals
     this.hotReload = hotReloadInDev && process.env.NODE_ENV === 'development'
   }
 
@@ -63,8 +72,8 @@ export class PugModule implements Module {
       let trimmedName = this.trimTemplatePath(name, basedir)
 
       if (this.hotReload) {
-        templates[trimmedName] = (...args: any[]) => {
-          return pug.compileFile(name, { basedir })(...args)
+        templates[trimmedName] = (params: TemplateParams) => {
+          return pug.compileFile(name, { basedir })(params)
         }
       } else {
         templates[trimmedName] = pug.compileFile(name, { basedir })
@@ -75,9 +84,11 @@ export class PugModule implements Module {
   }
 
   renderTemplate(templateName: string, locals?: any) {
+    let params = { ...this.globals, ...locals }
+
     if (!this.templates[templateName]) {
       throw new Error(`Invalid template '${templateName}'`)
     }
-    return this.templates[templateName](locals)
+    return this.templates[templateName](params)
   }
 }

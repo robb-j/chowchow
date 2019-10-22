@@ -5,7 +5,10 @@ describe('PugModule', () => {
   let pug: PugModule
 
   beforeEach(() => {
-    pug = new PugModule({ templateDir: join(__dirname, '../__mock__') })
+    pug = new PugModule({
+      templateDir: join(__dirname, '../__mock__'),
+      globals: { age: 42 }
+    })
   })
 
   describe('#setupModule', () => {
@@ -15,6 +18,7 @@ describe('PugModule', () => {
       const templates = Object.keys(pug.templates)
 
       expect(templates).toContain('name-template')
+      expect(templates).toContain('age-template')
       expect(templates).toContain('nested/template')
     })
   })
@@ -31,11 +35,9 @@ describe('PugModule', () => {
   })
 
   describe('#renderTemplate', () => {
-    beforeEach(async () => {
+    it('should render the template with passed variables', async () => {
       await pug.setupModule()
-    })
 
-    it('should render the template with passed variables', () => {
       let result = pug.renderTemplate('name-template', { name: 'geoff' })
 
       expect(result).toEqual('<h1>Hey, geoff!</h1>')
@@ -47,6 +49,13 @@ describe('PugModule', () => {
       let result = pug.renderTemplate('name-template', { name: 'geoff' })
 
       expect(result).toEqual('<h1>Hey, geoff!</h1>')
+    })
+    it('should merge in locals and globals', async () => {
+      await pug.setupModule()
+
+      let result = pug.renderTemplate('age-template', { name: 'geoff' })
+
+      expect(result).toEqual('<p>geoff is 42</p>')
     })
   })
 })
