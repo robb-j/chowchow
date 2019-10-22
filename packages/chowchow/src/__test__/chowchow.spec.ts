@@ -4,7 +4,7 @@ import {
   ChowChowInternals,
   BaseContext,
   ChowChowState
-} from '../ChowChow'
+} from '../chowchow'
 import supertest from 'supertest'
 
 class FakeModule implements Module {

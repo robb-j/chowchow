@@ -1,0 +1,44 @@
+{
+  "name": "@robb_j/chowchow-pug",
+  "version": "0.0.0",
+  "description": "Adds pug rendering capabilities to chowchow",
+  "author": "Rob Anderson (https://r0b.io)",
+  "repository": "robb-j/chowchow",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "coverage": "jest --coverage",
+    "prettier": "prettier --write '**/*.{js,json,css,md,ts,tsx}'",
+    "preversion": "npm run test -s && npm run build",
+    "test": "jest"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "modular",
+    "chowchow"
+  ],
+  "engines": {
+    "node": ">=8"
+  },
+  "dependencies": {
+    "glob": "^7.1.5",
+    "pug": "^2.0.4"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@robb_j/chowchow": "^0.6.1",
+    "@types/pug": "^2.0.4",
+    "ts-jest": "^24.1.0"
+  },
+  "peerDependencies": {
+    "@robb_j/chowchow": "^0.x.x"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  }
+}

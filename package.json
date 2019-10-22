@@ -1,6 +1,7 @@
 {
-  "name": "@robb_j/chowchow",
-  "version": "0.6.1",
+  "name": "@robb_j/chowchow-monorepo",
+  "version": "0.0.0",
+  "private": true,
   "description": "A modular express wrapper for typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,27 +9,25 @@
     "build": "tsc",
     "lint": "npx tsc --noEmit",
     "coverage": "jest --coverage",
-    "preversion": "npm test -s && npm run build && git add dist",
-    "prettier": "prettier --write ./**/*.{js,ts,tsx,json,css,md}",
+    "preversion": "npm test -s && npm run build",
+    "prettier": "prettier --write '**/*.{js,json,css,md,ts,tsx}'",
     "test": "jest",
-    "gen:toc": "md-toc -i"
+    "gen:toc": "md-toc -if '{README.md,packages/*/README.md}'"
   },
-  "keywords": [
-    "express",
-    "typescript",
-    "modular",
-    "chowchow"
-  ],
   "author": "Rob Anderson (https://r0b.io)",
   "repository": "robb-j/chowchow",
   "license": "MIT",
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
-    "*.{js,ts,tsx,json,css,md}": [
+    "*.{js,json,css,md,ts,tsx}": [
       "prettier --write",
       "git add"
     ]
@@ -36,30 +35,24 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "projects": [
+      "packages/*"
+    ],
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
     ]
   },
-  "dependencies": {
-    "express": "^4.17.1",
-    "stoppable": "^1.1.0"
-  },
   "devDependencies": {
     "@robb_j/md-toc": "^0.3.0",
-    "@types/express": "^4.17.0",
     "@types/jest": "^24.0.15",
     "@types/node": "^12.0.12",
-    "@types/stoppable": "^1.1.0",
-    "@types/supertest": "^2.0.8",
     "husky": "^3.0.0",
     "jest": "^24.8.0",
+    "lerna": "^3.18.2",
     "lint-staged": "^9.0.2",
-    "nodemon": "^1.19.1",
     "prettier": "1.18.2",
-    "supertest": "^4.0.2",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
+    "ts-jest": "^24.1.0",
     "typescript": "^3.5.2"
   }
 }

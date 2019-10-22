@@ -1,0 +1,43 @@
+{
+  "name": "@robb_j/chowchow",
+  "version": "0.6.1",
+  "description": "A modular express wrapper for typescript",
+  "author": "Rob Anderson (https://r0b.io)",
+  "repository": "robb-j/chowchow",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "coverage": "jest --coverage",
+    "prettier": "prettier --write '**/*.{js,json,css,md,ts,tsx}'",
+    "preversion": "npm run test -s && npm run build",
+    "test": "jest"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "modular",
+    "chowchow"
+  ],
+  "engines": {
+    "node": ">=8"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "stoppable": "^1.1.0",
+    "valid-env": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.1",
+    "@types/stoppable": "^1.1.0",
+    "@types/supertest": "^2.0.8",
+    "supertest": "^4.0.2",
+    "ts-jest": "^24.1.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  }
+}
