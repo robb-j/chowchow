@@ -17,8 +17,15 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+
       - run:
-          name: test
+          name: test-chowchow
+          command: npm test packages/chowchow
+      - run:
+          name: build-base
+          command: npx lerna run build --scope @robb_j/chowchow
+      - run:
+          name: test-rest
           command: npm test
       - run:
           name: coverage
