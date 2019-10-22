@@ -1,6 +1,6 @@
 {
   "name": "@robb_j/chowchow-pug",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Adds pug rendering capabilities to chowchow",
   "author": "Rob Anderson (https://r0b.io)",
   "repository": "robb-j/chowchow",
