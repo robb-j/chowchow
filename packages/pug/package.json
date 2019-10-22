@@ -29,10 +29,13 @@
     "pug": "^2.0.4"
   },
   "devDependencies": {
-    "@robb_j/chowchow": "^0.x.x",
     "@types/glob": "^7.1.1",
+    "@robb_j/chowchow": "^0.x.x",
     "@types/pug": "^2.0.4",
     "ts-jest": "^24.1.0"
+  },
+  "peerDependencies": {
+    "@robb_j/chowchow": "^0.x.x"
   },
   "jest": {
     "preset": "ts-jest",
