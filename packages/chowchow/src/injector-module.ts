@@ -1,4 +1,5 @@
-import { ChowChow, Module } from './ChowChow'
+import { ChowChow, Module } from './chowchow'
+import { checkVariables } from 'valid-env'
 
 export class InjectorModule<T extends object> implements Module {
   app: ChowChow = null as any
@@ -10,10 +11,7 @@ export class InjectorModule<T extends object> implements Module {
   ) {}
 
   checkEnvironment() {
-    let missing = this.env.filter(name => process.env[name] === undefined)
-    if (missing.length > 0) {
-      throw new Error(`Missing environment variables: ${missing.join(', ')}`)
-    }
+    checkVariables(this.env)
   }
 
   async setupModule() {
