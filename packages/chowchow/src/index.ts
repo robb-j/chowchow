@@ -1,2 +1,4 @@
 export * from './chowchow'
-export { InjectorModule } from './injector-module'
+export * from './env'
+export * from './events'
+export * from './http'

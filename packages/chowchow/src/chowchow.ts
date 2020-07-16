@@ -1,276 +1,233 @@
-import stoppable from 'stoppable'
-import { createServer } from 'http'
+import { ChowEventDef, EventHandler, EmitFunction } from './events'
+import { EnvKeys } from './env'
+import { ChowMethod } from './http'
+import {
+  RouteHandler,
+  MiddlewareHandler,
+  createRequest,
+  HttpResponse,
+} from './http'
+import { EventEmitter } from 'events'
+import { Server } from 'http'
+import express = require('express')
+import cors = require('cors')
 
-import express, {
-  Application,
-  Request,
-  Response,
-  NextFunction,
-  RequestHandler
-} from 'express'
+export type StartOptions = Partial<{
+  port: number
+  jsonBody: boolean
+  urlEncodedBody: boolean
+  corsHosts: string | string[]
+  trustProxy: boolean
+  outputUrl: boolean
+  handle404s: boolean
+}>
 
-export enum ChowChowState {
-  stopped = 'stopped',
-  setup = 'setup',
-  running = 'running'
+// export type BaseContext<E extends EnvKeys> = EnvContext<E> & EmitContext
+export interface BaseContext<E extends EnvKeys> {
+  emit: EmitFunction
+  env: Record<E, string>
 }
 
-export type BaseContext = {
-  req: Request
-  res: Response
-  next: NextFunction
-}
-
-/** A chowchow module, used to add functionality for your routes */
-export interface Module {
-  app: ChowChow
-  checkEnvironment(): void
-  setupModule(): void | Promise<void>
-  clearModule(): void | Promise<void>
-  extendExpress(expressApp: Application): void
-  extendEndpointContext(ctx: BaseContext): { [idx: string]: any }
-}
-
-export type ExpressFn = (app: Application) => void
-
-/** An express error handler, useful for improving code readability */
-export type ExpressHandler = (
-  error: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
+export type ChowFn<E extends EnvKeys, C extends BaseContext<E>> = (
+  chow: Chowish<E, C>
 ) => void
 
-/** A chowchow route */
-export type ChowChowRoute<T> = (ctx: BaseContext & T) => Promise<void> | void
+class EventNotHandledError extends Error {}
 
-/** A chowchow error handler (it has the chowchow context) */
-export type ErrorHandler<T> = (
-  error: any,
-  ctx: BaseContext & T
-) => Promise<void> | void
+export interface Chowish<E extends EnvKeys, C extends BaseContext<E>> {
+  env: Record<E, string>
 
-/** A function to convert chowchow routes to express routes for you */
-export type RouterFn<T> = (
-  app: Application,
-  r: (route: ChowChowRoute<T>) => RequestHandler
-) => void
+  event<T extends ChowEventDef>(
+    eventName: T['name'],
+    handler: EventHandler<T['payload'], C>
+  ): void
+  emit<T extends ChowEventDef>(
+    eventName: T['name'],
+    payload: T['payload']
+  ): void
 
-const nameOf = (o: object) => o.constructor.name
+  route(method: ChowMethod, path: string, handler: RouteHandler<C>): void
+  middleware(handler: MiddlewareHandler): void
 
-/** An interface to expose ChowChow internals for testing purposes */
-export interface ChowChowInternals {
-  state: ChowChowState
-  modules: Array<Module>
-  httpServer: stoppable.StoppableServer
-  expressApp: express.Express
-  routesToApply: Array<RouterFn<any>>
-  errorHandlers: Array<ErrorHandler<any>>
+  apply(...chowers: ((chow: this) => void)[]): void
+
+  makeContext(): Promise<C> | C
 }
 
-interface Constructor<T> {
-  new (...args: any[]): T
-}
+export class Chow<E extends EnvKeys, C extends BaseContext<E>>
+  implements Chowish<E, C> {
+  eventEmitter = new EventEmitter()
+  app = express()
+  server?: Server
 
-/** The chowchow app, where everything chowchow starts */
-export class ChowChow<T extends BaseContext = BaseContext> {
-  protected state = ChowChowState.stopped
-  protected modules = new Array<Module>()
-  protected expressApp = express()
-  protected httpServer = stoppable(createServer(this.expressApp))
-  protected routesToApply = new Array<RouterFn<any>>()
-  protected errorHandlers = new Array<ErrorHandler<any>>()
+  constructor(
+    public ctxFactory: (ctx: BaseContext<E>) => C | Promise<C>,
+    public env: Record<E, string>
+  ) {}
 
-  /** A static function to create a chow, useful for chaining. */
-  static create<T extends BaseContext>(): ChowChow<T> {
-    return new ChowChow<T>()
+  makeContext() {
+    return this.ctxFactory({
+      env: { ...this.env },
+      emit: (eventName, payload) => this.emit(eventName, payload),
+    })
   }
 
-  /** Add a module to chowchow, call order is important.
-    Modules callbacks are called in chronological order on setup
-    and reverse chronological order in teardown. */
-  use(module: Module): ChowChow<T> {
-    module.app = this
-    this.modules.push(module)
-    return this
-  }
-
-  /** Whether a module is registered */
-  has(ModuleType: Function): boolean {
-    return this.modules.some(m => m instanceof ModuleType)
-  }
-
-  /** Get a registered module */
-  getModule<T extends Module>(ModuleType: Constructor<T>): T | undefined {
-    return this.modules.find(m => m instanceof ModuleType) as any
-  }
-
-  /** Apply middleware to the internal express app. */
-  applyMiddleware(fn: ExpressFn) {
-    fn(this.expressApp)
-  }
-
-  /** Generate a chowchow context based on the current modules. */
-  makeCtx(req: Request, res: Response, next: NextFunction): any {
-    let ctx: any = { req, res, next }
-    for (let module of this.modules) {
-      Object.assign(ctx, module.extendEndpointContext(ctx))
-    }
-    return ctx
-  }
-
-  /**
-    Register chowchow routes with a generator,
-    the generator isn't called until #start is called.
-    It will throw if chowchow is already started.
-  */
-  applyRoutes(fn: RouterFn<T>) {
-    switch (this.state) {
-      case ChowChowState.running:
-        throw new Error('Cannot add routes once running')
-
-      default:
-        this.routesToApply.push(fn)
-    }
-  }
-
-  /** 
-    Register chowchow error handlers with a generator,
-    the generator isn't called until #start is called.
-    It will throw if chowchow is already started.
-  */
-  applyErrorHandler(fn: ErrorHandler<T>) {
-    if (this.state === ChowChowState.running) {
-      throw new Error('Cannot add error handlers once running')
-    }
-    this.errorHandlers.push(fn)
-  }
-
-  /**
-    Start up chowchow, calling module callbacks, applying routes
-    and error handlers then starting the express server.
-    It will throw an error if any module's fail #checkEnvironment.
-  */
-  async start({ verbose = false, port = 3000, logErrors = true } = {}) {
-    const logIfVerbose = verbose ? console.log : () => {}
-
-    this.state = ChowChowState.setup
-
-    //
-    // Check each module's environment, catching errors (for now)
-    //
-    logIfVerbose('Checking environment')
-    let invalidEnvironment = false
-    for (let module of this.modules) {
+  // Chowish#event
+  event<T extends ChowEventDef>(
+    eventName: T['name'],
+    handler: EventHandler<T['payload'], C>
+  ) {
+    this.eventEmitter.addListener(eventName, async (payload: any) => {
       try {
-        module.checkEnvironment()
-        logIfVerbose(' ✓ ' + nameOf(module))
+        const ctx = await this.makeContext()
+        const event = { type: eventName, payload }
+
+        await handler({ ...ctx, event })
       } catch (error) {
-        if (logErrors) {
-          console.log(' ✕ ' + nameOf(module) + ': ' + error.message)
-        }
-        invalidEnvironment = true
-      }
-    }
-
-    //
-    // Fail if any module's environment was invalid
-    //
-    if (invalidEnvironment) throw new Error('Invalid environment')
-
-    //
-    // Remember what routes have been registered upto this point
-    //
-    const existingRoutes = this.routesToApply
-    this.routesToApply = []
-
-    //
-    // Setup each module
-    //
-    logIfVerbose('Setting up modules')
-
-    for (let module of this.modules) {
-      await module.setupModule()
-      logIfVerbose(' ✓ ' + nameOf(module))
-    }
-
-    //
-    // Let each module extend express
-    //
-    logIfVerbose('Extending express')
-    for (let module of this.modules) {
-      module.extendExpress(this.expressApp)
-      logIfVerbose(' ✓ ' + nameOf(module))
-    }
-
-    //
-    // Put routes registered in modules before those previously registered
-    //
-    this.routesToApply = this.routesToApply.concat(existingRoutes)
-
-    //
-    // Apply routes by calling their generator
-    //
-    logIfVerbose('Adding routes')
-    for (let fn of this.routesToApply) {
-      this.registerRoute(fn)
-    }
-    this.routesToApply = []
-
-    //
-    // Create an express error handler which uses the registered handlers
-    //
-    logIfVerbose('Adding error handler')
-    this.expressApp.use(((err, req, res, next) => {
-      let ctx = this.makeCtx(req, res, next)
-      for (let handler of this.errorHandlers) handler(err, ctx)
-    }) as ExpressHandler)
-
-    //
-    // Startup the http server
-    //
-    await this.startServer(port)
-    this.state = ChowChowState.running
-  }
-
-  /** Stop chowchow, clearing modules, stopping the server and resetting it. */
-  async stop() {
-    if (this.state !== ChowChowState.running) return
-
-    // Clear each module in reverse order
-    for (let module of this.modules.reverse()) {
-      await module.clearModule()
-    }
-
-    // Stop the http server
-    await this.stopServer()
-    this.state = ChowChowState.stopped
-
-    // Reset the app & server to avoid strange configuration
-    this.expressApp = express()
-    this.httpServer = stoppable(createServer(this.expressApp))
-  }
-
-  /** Register a route with express by calling its generator */
-  protected registerRoute(fn: RouterFn<T>) {
-    fn(this.expressApp, route => async (req, res, next) => {
-      try {
-        await route(this.makeCtx(req, res, next))
-      } catch (error) {
-        next(error)
+        this.catchEventError(error, eventName)
       }
     })
   }
 
-  /** Internal method to start the express server (overriden in tests) */
-  protected startServer(port: number): Promise<void> {
-    return new Promise(resolve => this.httpServer.listen(port, resolve))
+  // Chowish#emit
+  emit<T extends ChowEventDef>(eventName: T['name'], payload: T['payload']) {
+    const handled = this.eventEmitter.emit(eventName, payload)
+    if (!handled) {
+      this.catchEventError(new EventNotHandledError(), eventName)
+    }
   }
 
-  /** Internal method to stop the express server (overriden in tests) */
-  protected stopServer(): Promise<void> {
-    return new Promise((resolve, reject) =>
-      this.httpServer.stop(err => (err ? reject(err) : resolve()))
-    )
+  // Chowish#route
+  route(method: ChowMethod, path: string, handler: RouteHandler<C>) {
+    this.app[method](path, async (req, res) => {
+      try {
+        const result = await handler({
+          ...(await this.makeContext()),
+          request: createRequest(req),
+        })
+
+        this.handleRouteResult(result, res)
+      } catch (error) {
+        this.catchRouteError(error, req, res)
+      }
+    })
+  }
+
+  // Chowish#middleware
+  middleware(handler: MiddlewareHandler) {
+    handler(this.app)
+  }
+
+  // Chowish#apply
+  apply(...chowers: ((chow: this) => void)[]) {
+    for (const chower of chowers) chower(this)
+  }
+
+  //
+  // start/stop
+  //
+  async start({
+    port = 3000,
+    trustProxy = false,
+    outputUrl = false,
+    handle404s = false,
+    jsonBody = false,
+    urlEncodedBody = false,
+    corsHosts = [],
+  }: StartOptions) {
+    const { app } = this
+
+    //
+    // Parse json bodies
+    // -> https://expressjs.com/en/api.html#express.json
+    //
+    if (jsonBody) {
+      app.use(express.json())
+    }
+
+    //
+    // Parse url encoded bodies
+    // -> https://expressjs.com/en/api.html#express.urlencoded
+    //
+    if (urlEncodedBody) {
+      app.use(express.urlencoded({ extended: true }))
+    }
+
+    //
+    // Register cors hosts for web-based users
+    // https://github.com/expressjs/cors#readme
+    //
+    if (corsHosts.length > 0) {
+      app.use(cors({ origin: corsHosts }))
+    }
+
+    //
+    // Trust connections when behind a reverse proxy
+    // -> https://expressjs.com/en/guide/behind-proxies.html
+    //
+    if (trustProxy) {
+      app.set('trust proxy', 1)
+    }
+
+    //
+    // Add a fallback route which will return a http 404 error
+    //
+    if (handle404s) {
+      app.get('*', (req, res) => {
+        this.handleRouteResult(new HttpResponse(404, 'Not found'), res)
+      })
+    }
+
+    //
+    // Wait for the server to start
+    // and store the http.Server instance so we can shut it down if needed
+    //
+    await new Promise((resolve) => (this.server = app.listen(port, resolve)))
+
+    //
+    // Output the url to stdout
+    //
+    if (outputUrl) {
+      console.log('Listening on http://localhost:3000')
+    }
+  }
+
+  /** Stop the server and ceist to accept new connections */
+  async stop() {
+    const { server } = this
+    if (!server || !server.listening) return
+
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+  }
+
+  //
+  // Handling
+  //
+
+  /** A centralised place to catch errors that occur when handling events */
+  catchEventError(error: Error, eventName: string) {
+    console.error(`Error handling '${eventName}'`)
+    console.error(error.message)
+    console.error(error.stack)
+  }
+
+  /** A centralised place to catch errors that occur when handling routes */
+  catchRouteError(error: Error, req: express.Request, res: express.Response) {
+    console.log(error)
+    res.status(500).send({ message: 'Something went wrong' })
+  }
+
+  /** Handle whatever a route returned */
+  handleRouteResult(result: any, res: express.Response) {
+    if (result instanceof HttpResponse) {
+      res.status(result.status).set(result.headers).send(result.body)
+    } else {
+      res.send(result)
+    }
   }
 }

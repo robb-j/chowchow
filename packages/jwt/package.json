@@ -33,13 +33,10 @@
   "devDependencies": {
     "@robb_j/chowchow": "^0.6.2",
     "@types/express": "^4.17.1",
-    "@types/jsonwebtoken": "^8.3.5",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.1.0",
-    "typescript": "^3.6.4"
+    "@types/jsonwebtoken": "^8.3.5"
   },
   "peerDependencies": {
-    "@robb_j/chowchow": "^0.x.x"
+    "@robb_j/chowchow": "0.x.x"
   },
   "jest": {
     "preset": "ts-jest",
