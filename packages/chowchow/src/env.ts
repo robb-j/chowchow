@@ -10,7 +10,7 @@ export type EnvKeys = string
  * A utility to make an environment that conforms to a generic set of keys
  * -> uses https://github.com/robb-j/valid-env/
  */
-export function makeEnv<E extends EnvKeys>(keys: E[]): Record<EnvKeys, string> {
+export function makeEnv<E extends string>(keys: E[]): Record<E, string> {
   validateEnv(keys)
 
   const obj: any = {}

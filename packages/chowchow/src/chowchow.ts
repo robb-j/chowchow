@@ -8,7 +8,7 @@ import {
   HttpResponse,
 } from './http'
 import { EventEmitter } from 'events'
-import { Server } from 'http'
+import { createServer } from 'http'
 import express = require('express')
 import cors = require('cors')
 
@@ -58,7 +58,7 @@ export class Chow<E extends EnvKeys, C extends BaseContext<E>>
   implements Chowish<E, C> {
   eventEmitter = new EventEmitter()
   app = express()
-  server?: Server
+  server = createServer(this.app)
 
   constructor(
     public ctxFactory: (ctx: BaseContext<E>) => C | Promise<C>,
@@ -182,7 +182,7 @@ export class Chow<E extends EnvKeys, C extends BaseContext<E>>
     // Wait for the server to start
     // and store the http.Server instance so we can shut it down if needed
     //
-    await new Promise((resolve) => (this.server = app.listen(port, resolve)))
+    await new Promise((resolve) => this.server.listen(port, resolve))
 
     //
     // Output the url to stdout

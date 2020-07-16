@@ -38,6 +38,15 @@ export class HttpMessage extends HttpResponse {
   }
 }
 
+/**
+ * A http response to redirect somewhere
+ */
+export class HttpRedirect extends HttpResponse {
+  constructor(location: string, permenant = false) {
+    super(permenant ? 301 : 302, '', { location })
+  }
+}
+
 /** Create a ChowRequest from a express.Request */
 export function createRequest(request: Request): ChowRequest {
   return {
