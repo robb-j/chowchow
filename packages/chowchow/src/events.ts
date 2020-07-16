@@ -22,3 +22,5 @@ export interface ChowEventDef<
 export interface EmitFunction {
   <T extends ChowEventDef>(eventName: T['name'], payload: T['payload']): void
 }
+
+export class EventNotHandledError extends Error {}

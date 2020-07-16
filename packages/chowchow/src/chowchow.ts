@@ -1,5 +1,9 @@
-import { ChowEventDef, EventHandler, EmitFunction } from './events'
-import { EnvKeys } from './env'
+import {
+  ChowEventDef,
+  EventHandler,
+  EmitFunction,
+  EventNotHandledError,
+} from './events'
 import { ChowMethod } from './http'
 import {
   RouteHandler,
@@ -23,19 +27,17 @@ export type StartOptions = Partial<{
 }>
 
 // export type BaseContext<E extends EnvKeys> = EnvContext<E> & EmitContext
-export interface BaseContext<E extends EnvKeys> {
+export interface BaseContext<E> {
   emit: EmitFunction
-  env: Record<E, string>
+  env: E
 }
 
-export type ChowFn<E extends EnvKeys, C extends BaseContext<E>> = (
-  chow: Chowish<E, C>
-) => void
+// export type ChowFunction<E, C extends BaseContext<E>> = (
+//   chow: Chowish<E, C>
+// ) => void
 
-class EventNotHandledError extends Error {}
-
-export interface Chowish<E extends EnvKeys, C extends BaseContext<E>> {
-  env: Record<E, string>
+export interface Chowish<E, C extends BaseContext<E>> {
+  env: E
 
   event<T extends ChowEventDef>(
     eventName: T['name'],
@@ -54,15 +56,14 @@ export interface Chowish<E extends EnvKeys, C extends BaseContext<E>> {
   makeContext(): Promise<C> | C
 }
 
-export class Chow<E extends EnvKeys, C extends BaseContext<E>>
-  implements Chowish<E, C> {
+export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
   eventEmitter = new EventEmitter()
   app = express()
   server = createServer(this.app)
 
   constructor(
     public ctxFactory: (ctx: BaseContext<E>) => C | Promise<C>,
-    public env: Record<E, string>
+    public env: E
   ) {}
 
   makeContext() {
@@ -212,8 +213,7 @@ export class Chow<E extends EnvKeys, C extends BaseContext<E>>
   /** A centralised place to catch errors that occur when handling events */
   catchEventError(error: Error, eventName: string) {
     console.error(`Error handling '${eventName}'`)
-    console.error(error.message)
-    console.error(error.stack)
+    console.error(error)
   }
 
   /** A centralised place to catch errors that occur when handling routes */

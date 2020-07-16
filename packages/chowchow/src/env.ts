@@ -1,6 +1,6 @@
 import { validateEnv } from 'valid-env'
 
-export type EnvKeys = string
+// export type EnvKeys = string
 
 // export interface EnvContext<E extends EnvKeys = string> {
 //   env: Record<E, string>
