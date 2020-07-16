@@ -6,7 +6,6 @@ import { match } from 'path-to-regexp'
 
 import {
   Chowish,
-  EnvKeys,
   ChowMethod,
   ChowRequest,
   RouteHandler,
@@ -21,8 +20,7 @@ interface DebugRoute<R extends RouteHandler<any>> {
   match: ReturnType<typeof match>
 }
 
-export interface MockChowish<E extends EnvKeys, C extends BaseContext<E>>
-  extends Chowish<E, C> {
+export interface MockChowish {
   /**
    * Simulate a http request to a route with url params, headers queries & bodies
    */
@@ -45,9 +43,9 @@ export interface MockChowish<E extends EnvKeys, C extends BaseContext<E>>
 // - Injects the 'emit' (bit of a hack) so you can assert it was called
 //   - the issue is the emit.bind() in chow wraps the jest.fn
 //
-function fakeRouter(
-  chow: Chowish<any, any>,
-  routes: DebugRoute<RouteHandler<any>>[]
+function fakeRouter<E, C extends BaseContext<E>>(
+  chow: Chowish<E, C>,
+  routes: DebugRoute<RouteHandler<C>>[]
 ) {
   return async (
     method: ChowMethod,
@@ -73,16 +71,14 @@ function fakeRouter(
     const request: ChowRequest = { headers, query, params, body }
     const ctx = await chow.makeContext()
 
-    return route.handler({ ...ctx, emit: chow.emit, request })
+    return route.handler({ ...ctx, request })
   }
 }
 
-export async function mockchow<
-  T extends object,
-  E extends EnvKeys,
-  C extends BaseContext<E>
->(chowFactory: () => Chowish<E, C>, extras: T): Promise<MockChowish<E, C> & T> {
-  const chow = chowFactory()
+export async function mockchow<T extends object, E, C extends BaseContext<E>>(
+  chow: Chowish<E, C>,
+  extras: T
+): Promise<MockChowish & Chowish<E, C> & T> {
   const routes: DebugRoute<RouteHandler<any>>[] = []
 
   //
@@ -107,8 +103,9 @@ export async function mockchow<
   //
   // Override emitting an event so it can be tested
   //
+  const originalEmit = chow.emit.bind(chow)
   const emit = jest.fn((eventName: string, payload: any) => {
-    return chow.emit(eventName, payload)
+    return originalEmit(eventName, payload)
   })
 
   //
@@ -133,11 +130,17 @@ export async function mockchow<
   const makeContext = jest.fn(() => chow.makeContext())
 
   //
+  // Override emit on chow
+  //
+  chow.emit = emit
+
+  //
   // Return our testable chow instance,
   // with user-defined extras on there too
   //
   return {
     env: chow.env,
+    ...extras,
     http,
     waitForEvents,
     emit,
@@ -146,6 +149,5 @@ export async function mockchow<
     middleware,
     apply,
     makeContext,
-    ...extras,
   }
 }
