@@ -63,8 +63,8 @@ export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
   server = createServer(this.app)
 
   constructor(
-    public ctxFactory: (ctx: BaseContext<E>) => C | Promise<C>,
-    public env: E
+    public env: E,
+    public ctxFactory: (ctx: BaseContext<E>) => C | Promise<C>
   ) {}
 
   baseContext(): BaseContext<E> {
@@ -235,8 +235,7 @@ export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
 
   /** A centralised place to catch errors that occur when handling routes */
   catchRouteError(error: Error, req: express.Request, res: express.Response) {
-    console.log(error)
-    res.status(500).send({ message: 'Something went wrong' })
+    res.status(400).send({ message: 'Something went wrong' })
   }
 
   /** Handle whatever a route returned */
