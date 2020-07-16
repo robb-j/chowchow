@@ -37,10 +37,6 @@
     "testEnvironment": "node",
     "projects": [
       "packages/*"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/"
     ]
   },
   "devDependencies": {
