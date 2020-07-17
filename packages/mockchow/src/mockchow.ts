@@ -13,10 +13,10 @@ import {
 } from '@robb_j/chowchow'
 
 /** An internal type for storing routes so thet can be called programatically */
-interface DebugRoute<R extends RouteHandler<any>> {
+export interface DebugRoute<C> {
   method: ChowMethod
   path: string
-  handler: R
+  handler: RouteHandler<C>
   match: ReturnType<typeof match>
 }
 
@@ -43,14 +43,14 @@ export interface MockChowish {
 // - Injects the 'emit' (bit of a hack) so you can assert it was called
 //   - the issue is the emit.bind() in chow wraps the jest.fn
 //
-function fakeRouter<E, C extends BaseContext<E>>(
+export function fakeRouter<E, C extends BaseContext<E>>(
   chow: Chowish<E, C>,
-  routes: DebugRoute<RouteHandler<C>>[]
+  routes: DebugRoute<C>[]
 ) {
   return async (
     method: ChowMethod,
     path: string,
-    { headers = {}, query = {}, body = '' } = {}
+    { headers = {}, query = {}, body = '' as any } = {}
   ) => {
     const route = routes.find((r) => r.method === method && r.match(path))
 
@@ -75,11 +75,24 @@ function fakeRouter<E, C extends BaseContext<E>>(
   }
 }
 
-export async function mockchow<T extends object, E, C extends BaseContext<E>>(
+export function makeDebugRoute<C>(
+  method: ChowMethod,
+  path: string,
+  handler: RouteHandler<C>
+): DebugRoute<C> {
+  return {
+    method: method,
+    path: path,
+    handler: handler,
+    match: match(path, { decode: decodeURIComponent }),
+  }
+}
+
+export function mockchow<T extends object, E, C extends BaseContext<E>>(
   chow: Chowish<E, C>,
   extras: T
-): Promise<MockChowish & Chowish<E, C> & T> {
-  const routes: DebugRoute<RouteHandler<any>>[] = []
+): MockChowish & Chowish<E, C> & T {
+  const routes: DebugRoute<C>[] = []
 
   //
   // Create a fake router to test endpoints
@@ -114,12 +127,7 @@ export async function mockchow<T extends object, E, C extends BaseContext<E>>(
   //
   const route = jest.fn((method, path, handler) => {
     chow.route(method, path, handler)
-    routes.push({
-      match: match(path, { decode: decodeURIComponent }),
-      method,
-      path,
-      handler,
-    })
+    routes.push(makeDebugRoute(method, path, handler))
   })
 
   //
