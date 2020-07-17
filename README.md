@@ -4,6 +4,8 @@ A modular express wrapper for writing Typescript servers.
 
 [![CircleCI](https://circleci.com/gh/robb-j/chowchow.svg?style=svg)](https://circleci.com/gh/robb-j/chowchow)
 
+> ❗️This readme represents v0.6.x of chowchow and haven't been updated to v0.7.x / v1.x yet
+
 <!-- toc-head -->
 
 ## Table of contents
