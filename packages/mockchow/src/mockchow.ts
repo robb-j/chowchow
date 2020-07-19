@@ -88,6 +88,9 @@ export function makeDebugRoute<C>(
   }
 }
 
+/**
+ * Creates an object that implements Chowish but for testing
+ */
 export function mockchow<T extends object, E, C extends BaseContext<E>>(
   chow: Chowish<E, C>,
   extras: T
