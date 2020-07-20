@@ -18,12 +18,15 @@ import cors = require('cors')
 
 export type StartOptions = Partial<{
   port: number
+  outputUrl: boolean
+  handle404s: boolean
+}>
+
+export type HelperOptions = Partial<{
   jsonBody: boolean
   urlEncodedBody: boolean
   corsHosts: string | string[]
   trustProxy: boolean
-  outputUrl: boolean
-  handle404s: boolean
 }>
 
 // export type BaseContext<E extends EnvKeys> = EnvContext<E> & EmitContext
@@ -140,18 +143,12 @@ export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
   //   }
   // }
 
-  //
-  // start/stop
-  //
-  async start({
-    port = 3000,
+  addHelpers({
     trustProxy = false,
-    outputUrl = false,
-    handle404s = false,
     jsonBody = false,
     urlEncodedBody = false,
     corsHosts = [],
-  }: StartOptions) {
+  }: HelperOptions) {
     const { app } = this
 
     //
@@ -185,6 +182,17 @@ export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
     if (trustProxy) {
       app.set('trust proxy', 1)
     }
+  }
+
+  //
+  // start/stop
+  //
+  async start({
+    port = 3000,
+    handle404s = false,
+    outputUrl = false,
+  }: StartOptions) {
+    const { app } = this
 
     //
     // Add a fallback route which will return a http 404 error
