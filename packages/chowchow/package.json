@@ -1,6 +1,6 @@
 {
   "name": "@robb_j/chowchow",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A modular express wrapper for typescript",
   "author": "Rob Anderson (https://r0b.io)",
   "repository": "robb-j/chowchow",
