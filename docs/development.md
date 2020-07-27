@@ -1,5 +1,7 @@
 # Notes on developing ChowChow itself
 
+> ❗️TODO needs updating for 0.7.x ?
+
 ChowChow is written in [TypeScript](https://www.typescriptlang.org/)
 and is published through [npm](https://www.npmjs.com)
 and of course follows [semantic versioning](https://semver.org/).

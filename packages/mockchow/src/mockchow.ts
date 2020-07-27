@@ -43,7 +43,7 @@ export interface MockChowish {
 // - Injects the 'emit' (bit of a hack) so you can assert it was called
 //   - the issue is the emit.bind() in chow wraps the jest.fn
 //
-export function fakeRouter<E, C extends BaseContext<E>>(
+export function fakeRouter<E, C extends object>(
   chow: Chowish<E, C>,
   routes: DebugRoute<C>[]
 ) {
@@ -91,7 +91,7 @@ export function makeDebugRoute<C>(
 /**
  * Creates an object that implements Chowish but for testing
  */
-export function mockchow<T extends object, E, C extends BaseContext<E>>(
+export function mockchow<T extends object, E, C extends object>(
   chow: Chowish<E, C>,
   extras: T
 ): MockChowish & Chowish<E, C> & T {

@@ -1,8 +1,5 @@
 # ChowChow | mockchow
 
-Utilities for testing chowchow using [jest](https://jestjs.io/)
+This package is part of a monorepo, the docs are at the root.
 
-<!-- toc-head -->
-<!-- toc-tail -->
-
-> WIP
+[Take me to the docs →](https://github.com/robb-j/chowchow/#readme)

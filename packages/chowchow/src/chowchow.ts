@@ -35,38 +35,41 @@ export interface BaseContext<E> {
   env: E
 }
 
-// export type ChowFunction<E, C extends BaseContext<E>> = (
-//   chow: Chowish<E, C>
-// ) => void
+type Ctx<C, E> = C & BaseContext<E>
+type MaybePromise<T> = Promise<T> | T
 
-export interface Chowish<E, C extends BaseContext<E>> {
+export interface Chowish<E, C extends object> {
   env: E
 
   event<T extends ChowEventDef>(
     eventName: T['name'],
-    handler: EventHandler<T['payload'], C>
+    handler: EventHandler<T['payload'], Ctx<C, E>>
   ): void
   emit<T extends ChowEventDef>(
     eventName: T['name'],
     payload: T['payload']
   ): void
 
-  route(method: ChowMethod, path: string, handler: RouteHandler<C>): void
+  route(
+    method: ChowMethod,
+    path: string,
+    handler: RouteHandler<Ctx<C, E>>
+  ): void
   middleware(handler: MiddlewareHandler): void
 
   apply(...chowers: ((chow: this) => void)[]): void
 
-  makeContext(): Promise<C> | C
+  makeContext(): MaybePromise<Ctx<C, E>>
 }
 
-export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
+export class Chow<E, C extends object> implements Chowish<E, C> {
   eventEmitter = new EventEmitter()
   app = express()
   server = createServer(this.app)
 
   constructor(
     public env: E,
-    public ctxFactory: (ctx: BaseContext<E>) => C | Promise<C>
+    public ctxFactory: (ctx: BaseContext<E>) => MaybePromise<C>
   ) {}
 
   baseContext(): BaseContext<E> {
@@ -76,14 +79,16 @@ export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
     }
   }
 
-  makeContext() {
-    return this.ctxFactory(this.baseContext())
+  async makeContext() {
+    const base = this.baseContext()
+    const rest = await this.ctxFactory(this.baseContext())
+    return { ...base, ...rest }
   }
 
   // Chowish#event
   event<T extends ChowEventDef>(
     eventName: T['name'],
-    handler: EventHandler<T['payload'], C>
+    handler: EventHandler<T['payload'], Ctx<C, E>>
   ) {
     this.eventEmitter.addListener(eventName, async (payload: any) => {
       try {
@@ -106,7 +111,7 @@ export class Chow<E, C extends BaseContext<E>> implements Chowish<E, C> {
   }
 
   // Chowish#route
-  route(method: ChowMethod, path: string, handler: RouteHandler<C>) {
+  route(method: ChowMethod, path: string, handler: RouteHandler<Ctx<C, E>>) {
     this.app[method](path, async (req, res) => {
       try {
         const result = await handler({

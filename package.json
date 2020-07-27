@@ -12,7 +12,7 @@
     "preversion": "npm test -s && npm run build",
     "prettier": "prettier --write '**/*.{js,json,css,md,ts,tsx}'",
     "test": "jest",
-    "gen:toc": "md-toc -if '{README.md,packages/*/README.md}'"
+    "gen:toc": "md-toc -if='{README.md,packages/*/README.md,docs/*.md}'"
   },
   "author": "Rob Anderson (https://r0b.io)",
   "repository": "robb-j/chowchow",

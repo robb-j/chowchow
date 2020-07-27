@@ -1,5 +1,5 @@
 import request = require('supertest')
-import { Chow, BaseContext } from '../chowchow'
+import { Chow } from '../chowchow'
 import { HttpResponse } from '../http'
 
 interface TestEnv {
@@ -7,7 +7,7 @@ interface TestEnv {
   NUM_CARROTS: string
 }
 
-type Context = BaseContext<TestEnv> & {
+type Context = {
   greet(name: string): string
 }
 
@@ -20,7 +20,6 @@ let chow: Chow<TestEnv, Context>
 
 beforeEach(async () => {
   chow = new Chow<TestEnv, Context>(testEnv, (ctx) => ({
-    ...ctx,
     greet: jest.fn((name) => `Hello ${name}`),
   }))
 })
