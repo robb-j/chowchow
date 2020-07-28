@@ -64,6 +64,13 @@ interface Env {
   JWT_SECRET: string
   SELF_URL: string
 }
+
+// An instance of the environment
+const env = {
+  MONGO_URL: 'mongodb://user:secret@localhost:27017',
+  JWT_SECRET: 'top_secret',
+  SELF_URL: 'http://localhost:3000',
+}
 ```
 
 <details>
@@ -75,13 +82,6 @@ export type Env = ReturnType<typeof createEnv>
 export function createEnv(env: Record<string, string> = process.env) {
   const { MONGO_URL, JWT_SECRET, SELF_URL } = process.env
   return { MONGO_URL, JWT_SECRET, SELF_URL }
-}
-
-// An instance of the environment
-const env = {
-  MONGO_URL: 'mongodb://user:secret@localhost:27017',
-  JWT_SECRET: 'top_secret',
-  SELF_URL: 'http://localhost:3000',
 }
 ```
 
