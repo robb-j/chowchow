@@ -76,6 +76,13 @@ export function createEnv(env: Record<string, string> = process.env) {
   const { MONGO_URL, JWT_SECRET, SELF_URL } = process.env
   return { MONGO_URL, JWT_SECRET, SELF_URL }
 }
+
+// An instance of the environment
+const env = {
+  MONGO_URL: 'mongodb://user:secret@localhost:27017',
+  JWT_SECRET: 'top_secret',
+  SELF_URL: 'http://localhost:3000',
+}
 ```
 
 > You could use something like [valid-env](https://www.npmjs.com/package/valid-env)
@@ -96,13 +103,6 @@ import { Chow } from '@robb_j/chowchow'
 // The context type
 export interface Context {
   greet(name: string): string
-}
-
-// An instance of the environment
-const env = {
-  MONGO_URL: 'mongodb://user:secret@localhost:27017',
-  JWT_SECRET: 'top_secret',
-  SELF_URL: 'http://localhost:3000',
 }
 
 // Create a new chow with an environment and a function to generate our context
