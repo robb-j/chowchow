@@ -306,3 +306,5 @@ const chow = new Chow<Env, Context>(env, () => {
 - Add socket.io package "sockchow"
 - Make `env` immutable
 - Experiment with "magicApply" to auto-register Chower functions
+- Experiment with generics on chow.route for route params
+- Allow HttpRedirect to take a URL instance
