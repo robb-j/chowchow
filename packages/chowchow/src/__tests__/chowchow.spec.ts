@@ -160,7 +160,118 @@ describe('Chow', () => {
     })
   })
 
-  describe('#something', () => {
-    // ...
+  describe('#addHelpers', () => {
+    it('should enable json body parsing', async () => {
+      chow.addHelpers({ jsonBody: true })
+
+      let body = null
+      chow.route('post', '/', (ctx) => {
+        body = ctx.request.body
+      })
+
+      await request(chow.app)
+        .post('/')
+        .send('{"name":"Geoff","age":42}')
+        .set('Content-Type', 'application/json')
+
+      expect(body).toEqual({
+        name: 'Geoff',
+        age: 42,
+      })
+    })
+
+    it('should enable url encoded body parsing', async () => {
+      chow.addHelpers({ urlEncodedBody: true })
+
+      let body = null
+      chow.route('post', '/', (ctx) => {
+        body = ctx.request.body
+      })
+
+      await request(chow.app)
+        .post('/')
+        .send('name=Geoff&age=42')
+        .set('Content-Type', 'application/x-www-form-urlencoded')
+
+      expect(body).toEqual({
+        name: 'Geoff',
+        age: '42',
+      })
+    })
+
+    it('should add cors headers', async () => {
+      chow.addHelpers({ corsHosts: 'http://localhost:8080' })
+
+      chow.route('get', '/', (ctx) => 'hello')
+
+      const res = await request(chow.app).get('/')
+
+      expect(res.header['access-control-allow-origin']).toEqual(
+        'http://localhost:8080'
+      )
+    })
+
+    it('should enable trust proxy', async () => {
+      chow.addHelpers({ trustProxy: true })
+
+      let host, proto, ip
+      chow.middleware((app) => {
+        app.use((req, res, next) => {
+          host = req.hostname
+          ip = req.ip
+          proto = req.protocol
+          next()
+        })
+      })
+
+      chow.route('get', '/', (ctx) => 'hello')
+
+      const res = await request(chow.app)
+        .get('/')
+        .set('X-Forwarded-Host', 'someapp.dev')
+        .set('X-Forwarded-Proto', 'https')
+        .set('X-Forwarded-For', '000.000.000.000')
+
+      expect(res.status).toEqual(200)
+
+      expect({ host, proto, ip }).toEqual({
+        host: 'someapp.dev',
+        proto: 'https',
+        ip: '000.000.000.000',
+      })
+    })
+  })
+
+  describe('#start', () => {
+    beforeEach(() => {
+      chow.server.listen = jest.fn((port, resolve) => resolve()) as any
+    })
+
+    it('should start the http server', async () => {
+      await chow.start({ port: 1234 })
+
+      expect(chow.server.listen).toBeCalledWith(1234, expect.any(Function))
+    })
+
+    it('should handle 404 errors when enabled', async () => {
+      await chow.start({ handle404s: true })
+    })
+  })
+
+  describe('#stop', () => {
+    it('should stop the server', async () => {
+      chow.server.close = jest.fn((cb) => cb(null)) as any
+
+      await chow.stop()
+
+      expect(chow.server.close).toBeCalled()
+    })
+
+    it('should throw any errors', async () => {
+      const err = new Error()
+      chow.server.close = jest.fn((cb) => cb(err)) as any
+
+      expect(chow.stop()).rejects.toEqual(err)
+    })
   })
 })

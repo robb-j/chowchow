@@ -196,7 +196,7 @@ export class Chow<E, C extends object> implements Chowish<E, C> {
     port = 3000,
     handle404s = false,
     outputUrl = false,
-  }: StartOptions) {
+  }: StartOptions = {}) {
     const { app } = this
 
     //
@@ -223,12 +223,9 @@ export class Chow<E, C extends object> implements Chowish<E, C> {
   }
 
   /** Stop the server and ceist to accept new connections */
-  async stop() {
-    const { server } = this
-    if (!server || !server.listening) return
-
-    await new Promise((resolve, reject) => {
-      server.close((err) => {
+  stop() {
+    return new Promise((resolve, reject) => {
+      this.server.close((err) => {
         if (err) reject(err)
         else resolve()
       })
