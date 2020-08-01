@@ -41,6 +41,9 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts"
     ]
   }
 }

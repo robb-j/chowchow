@@ -255,6 +255,10 @@ describe('Chow', () => {
 
     it('should handle 404 errors when enabled', async () => {
       await chow.start({ handle404s: true })
+
+      const res = await request(chow.app).get('/')
+
+      expect(res.status).toEqual(404)
     })
   })
 
