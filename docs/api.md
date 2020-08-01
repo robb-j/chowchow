@@ -24,11 +24,34 @@
 
 <!-- toc-tail -->
 
-> WIP
-
-TODO:
-
 ## Chow
+
+### constructor
+
+Create a new chow instance to run a server.
+It takes a set of environment variables and a contextFactory,
+a method to generate your unique context.
+
+```ts
+const env = {
+  HAS_POTATOS: true
+}
+
+type Env = typeof env
+interface Context {
+  greet(name: string): string
+}
+
+const chow = new Chow<Env, Context>(env, async () => {
+  greet(name) => `Hello, ${name}`
+})
+```
+
+Your env object will be copied and available on any subsequent contexts.
+
+The context factory is used to generate a new context for each request or event.
+It can be asynchronous and is passed in a 'BaseContext' which has the other fields your handlers have access to.
+Namely the `env` object and an `emit` method.
 
 ### env
 

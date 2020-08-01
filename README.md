@@ -309,3 +309,4 @@ const chow = new Chow<Env, Context>(env, () => {
 - Experiment with generics on chow.route for route params
 - Allow HttpRedirect to take a URL instance
 - Add the rest of the http methods to `chow.route`
+- Make route or event available for context factories.
