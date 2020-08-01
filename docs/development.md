@@ -2,6 +2,19 @@
 
 > ❗️TODO needs updating for 0.7.x ?
 
+<!-- toc-head -->
+
+## Table of contents
+
+- [Setup](#setup)
+- [Regular use](#regular-use)
+  - [Irregular use](#irregular-use)
+- [Code formatting](#code-formatting)
+- [Testing](#testing)
+- [Deployment](#deployment)
+
+<!-- toc-tail -->
+
 ChowChow is written in [TypeScript](https://www.typescriptlang.org/)
 and is published through [npm](https://www.npmjs.com)
 and of course follows [semantic versioning](https://semver.org/).

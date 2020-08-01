@@ -2,6 +2,12 @@
 
 > WIP
 
+<!-- toc-head -->
+
+## Table of contents
+
+<!-- toc-tail -->
+
 TODO:
 
 - Using mockchow
