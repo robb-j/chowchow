@@ -168,7 +168,7 @@ It takes an object of opt-in arguments, defined below
 - `trustProxy` – tell express to trust x-forwarded headers when behind a reverse proxy
 - `jsonBody` - parse json bodies onto `request.body`
 - `urlEncodedBody` - parse url encoded (form data) onto `request.body`
-- `corsHosts` - set to an array of hosts that are allowed to to XHR requests
+- `corsHosts` - set to an array of hosts that are allowed to do XHR requests
 
 To turn them all on:
 
@@ -275,15 +275,15 @@ It will `process.exit(1)` if any of the variables are not set.
 
 It uses [valid-env](https://github.com/robb-j/valid-env/) under the hood.
 
-> Its more verbose than I'd like, typescript needs to type
-> and javascript needs the values to prepare the object unfortunately
+> Its more verbose than I'd like, typescript needs the type
+> and javascript needs a value to prepare the object unfortunately
 
 ```ts
 type EnvKeys = 'APP_NAME' | 'SQL_URL' | 'SOME_API_TOKEN'
 
 const env = makeEnv<EnvKeys>(['APP_NAME', 'SQL_URL', 'SOME_API_TOKEN'])
 
-// Not strongly typed
+// Now strongly typed
 env.APP_NAME
 env.SQL_URL
 env.SOME_API_TOKEN
