@@ -308,3 +308,4 @@ const chow = new Chow<Env, Context>(env, () => {
 - Experiment with "magicApply" to auto-register Chower functions
 - Experiment with generics on chow.route for route params
 - Allow HttpRedirect to take a URL instance
+- Add the rest of the http methods to `chow.route`
