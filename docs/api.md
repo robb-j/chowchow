@@ -34,7 +34,7 @@ a method to generate your unique context.
 
 ```ts
 const env = {
-  HAS_POTATOS: true
+  HAS_POTATOS: true,
 }
 
 type Env = typeof env
@@ -42,9 +42,9 @@ interface Context {
   greet(name: string): string
 }
 
-const chow = new Chow<Env, Context>(env, async () => {
-  greet(name) => `Hello, ${name}`
-})
+const chow = new Chow<Env, Context>(env, async () => ({
+  greet: (name) => `Hello, ${name}`,
+}))
 ```
 
 Your env object will be copied and available on any subsequent contexts.
