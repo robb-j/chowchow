@@ -15,6 +15,8 @@ import { EventEmitter } from 'events'
 import { createServer } from 'http'
 import express = require('express')
 import cors = require('cors')
+import path = require('path')
+import globby = require('globby')
 
 export type StartOptions = Partial<{
   port: number
@@ -136,17 +138,27 @@ export class Chow<E, C extends object> implements Chowish<E, C> {
     for (const chower of chowers) chower(this)
   }
 
-  // async magicApply(pattern: string) {
-  //   const matches = await globby(pattern)
+  /** Experimental, could change at any time */
+  async magicApply(base: string, pattern: string = 'routes/*.{ts,js}') {
+    const fullPatern = path.join(base, pattern)
+    const matches = await globby(fullPatern)
+    const modules: Function[] = []
 
-  //   for (const path of matches) {
-  //     const chower = await import(path)
-  //     if (typeof chower !== 'function') {
-  //       throw new Error(`magicApply found a non-function at "${path}"`)
-  //     }
-  //     chower(this)
-  //   }
-  // }
+    for (const file of matches) {
+      const chower = await import(file)
+
+      const fn = chower.default ?? chower
+
+      if (typeof fn !== 'function') {
+        throw new Error(`magicApply found a non-function at "${file}"`)
+      }
+      fn(this)
+
+      modules.push(fn)
+    }
+
+    return modules
+  }
 
   addHelpers({
     trustProxy = false,
