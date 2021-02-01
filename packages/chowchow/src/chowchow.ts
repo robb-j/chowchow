@@ -123,7 +123,7 @@ export class Chow<E, C extends object> implements Chowish<E, C> {
 
         this.handleRouteResult(result, res)
       } catch (error) {
-        this.catchRouteError(error, req, res)
+        this.catchRouteError(error, path, req, res)
       }
     })
   }
@@ -255,7 +255,9 @@ export class Chow<E, C extends object> implements Chowish<E, C> {
   }
 
   /** A centralised place to catch errors that occur when handling routes */
-  catchRouteError(error: Error, req: express.Request, res: express.Response) {
+  catchRouteError(error: Error, path: string, req: express.Request, res: express.Response) {
+    console.error(`Error handling route '${path}'`)
+    console.error(error)
     res.status(400).send({ message: 'Something went wrong' })
   }
 
