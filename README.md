@@ -1,5 +1,7 @@
 # ChowChow
 
+> Check out [Gruber](https://github.com/robb-j/gruber) instead of this.
+
 A typed functional wrapper for express to build testable servers.
 
 [![CircleCI](https://circleci.com/gh/robb-j/chowchow.svg?style=svg)](https://circleci.com/gh/robb-j/chowchow)
